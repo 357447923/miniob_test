@@ -100,8 +100,9 @@ void SessionStage::handle_request(StageEvent *event)
 
   Session::set_current_session(sev->session());
   sev->session()->set_current_request(sev);
-  SQLStageEvent *sql_event = new SQLStageEvent(sev, sql);
-  (void)handle_sql(sql_event);
+  // 我把创建到堆区改为创建在栈区
+  SQLStageEvent sql_event(sev, sql);
+  (void)handle_sql(&sql_event);
 
   Communicator *communicator = sev->get_communicator();
   
@@ -127,30 +128,34 @@ void SessionStage::handle_request(StageEvent *event)
  */
 RC SessionStage::handle_sql(SQLStageEvent *sql_event)
 {
+  // 查询缓存阶段，在框架简介中并不存在这一步(目前只返回RC::SUCCESS)
   RC rc = query_cache_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do query cache. rc=%s", strrc(rc));
     return rc;
   }
-
+  // 解析sql语句
   rc = parse_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do parse. rc=%s", strrc(rc));
     return rc;
   }
+  // 在框架简介中，此处应该有一个plan Cache
 
+  // 判断语义合法性,并且创建对应的stmt
   rc = resolve_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do resolve. rc=%s", strrc(rc));
     return rc;
   }
-  
+  // transformer 和 optimizer 都是优化阶段
+  // miniob中只有optimizer
   rc = optimize_stage_.handle_request(sql_event);
   if (rc != RC::UNIMPLENMENT && rc != RC::SUCCESS) {
     LOG_TRACE("failed to do optimize. rc=%s", strrc(rc));
     return rc;
   }
-  
+  // 执行阶段
   rc = execute_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do execute. rc=%s", strrc(rc));

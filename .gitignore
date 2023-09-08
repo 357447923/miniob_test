@@ -25,4 +25,6 @@ GRTAGS
 GPATH
 GTAGS
 docs/book
+observe.log.*
+clog
 #*#
