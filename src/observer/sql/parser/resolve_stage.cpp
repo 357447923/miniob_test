@@ -39,7 +39,7 @@ RC ResolveStage::handle_request(SQLStageEvent *sql_event)
     LOG_ERROR("cannot find current db");
     rc = RC::SCHEMA_DB_NOT_EXIST;
     sql_result->set_return_code(rc);
-    sql_result->set_state_string("no db selected");
+    // sql_result->set_state_string("no db selected");
     return rc;
   }
   // 将语法解析的结果转为stmt对象
