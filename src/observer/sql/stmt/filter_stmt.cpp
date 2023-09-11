@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/filter_stmt.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
+#include "common/date.h"
 
 FilterStmt::~FilterStmt()
 {
@@ -25,6 +26,36 @@ FilterStmt::~FilterStmt()
     delete unit;
   }
   filter_units_.clear();
+}
+
+/**
+ * @brief 类型转换，把value中的类型转为meta对应的类型
+ * 
+ */
+static RC convert_value(Value& value, const FieldMeta *meta) {
+  AttrType type = value.attr_type();
+  AttrType field_type = meta->type();
+  RC rc = RC::SUCCESS;
+  // 类型相同不需要转换
+  if (type == field_type) {
+    return rc;
+  }
+  switch (field_type) {
+    // 元数据类型是DATES并且传入类型是字符串时，可以进行转换
+  case DATES:
+    if (type == CHARS) {
+      int32_t date = -1;
+      rc = str_to_date(value.data(), date);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      value.set_date(date);
+    }
+    break;
+  default:
+    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  }
+  return rc;
 }
 
 RC FilterStmt::create(Db *db, Table *default_table, std::unordered_map<std::string, Table *> *tables,
@@ -89,7 +120,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
   }
 
   filter_unit = new FilterUnit;
-
+  // 类型转换可以枚举一下左边是值，右边是值，两边都是属性的情况
   if (condition.left_is_attr) {
     Table *table = nullptr;
     const FieldMeta *field = nullptr;
@@ -119,6 +150,22 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     filter_obj.init_attr(Field(table, field));
     filter_unit->set_right(filter_obj);
   } else {
+    // 获取对应的字段元数据
+    Table *table = nullptr;
+    const FieldMeta *field = nullptr;
+    rc = get_table_and_field(db, default_table, tables, condition.left_attr, table, field);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("cannot find attr");
+      return rc;
+    }
+
+    Value& value = const_cast<Value&>(condition.right_value);
+    rc = convert_value(value, field);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("Str: %s, can't be convert to date", value.data());
+      return rc;
+    }
+
     FilterObj filter_obj;
     filter_obj.init_value(condition.right_value);
     filter_unit->set_right(filter_obj);
@@ -126,6 +173,6 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
 
   filter_unit->set_comp(comp);
 
-  // 检查两个类型是否能够比较
+  // TODO 检查两个类型是否能够比较
   return rc;
 }

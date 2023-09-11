@@ -18,12 +18,13 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "common/lang/comparator.h"
 #include "common/lang/string.h"
+#include "common/date.h"
 
-const char *ATTR_TYPE_NAME[] = {"undefined", "chars", "ints", "floats", "booleans"};
+const char *ATTR_TYPE_NAME[] = {"undefined", "chars", "ints", "floats", "dates", "booleans"};
 
 const char *attr_type_to_string(AttrType type)
 {
-  if (type >= UNDEFINED && type <= FLOATS) {
+  if (type >= UNDEFINED && type <= BOOLEANS) {
     return ATTR_TYPE_NAME[type];
   }
   return "unknown";
@@ -64,7 +65,7 @@ void Value::set_data(char *data, int length)
     case CHARS: {
       set_string(data, length);
     } break;
-    case INTS: {
+    case INTS: case DATES: {
       num_value_.int_value_ = *(int *)data;
       length_ = length;
     } break;
@@ -112,6 +113,12 @@ void Value::set_string(const char *s, int len /*= 0*/)
   length_ = str_value_.length();
 }
 
+void Value::set_date(int32_t date) {
+  attr_type_ = DATES;
+  num_value_.int_value_ = date;
+  length_ = sizeof(date);
+}
+
 void Value::set_value(const Value &value)
 {
   switch (value.attr_type_) {
@@ -127,6 +134,9 @@ void Value::set_value(const Value &value)
     case BOOLEANS: {
       set_boolean(value.get_boolean());
     } break;
+    case DATES: {
+      set_date(value.get_int());
+    }
     case UNDEFINED: {
       ASSERT(false, "got an invalid value type");
     } break;
@@ -161,6 +171,10 @@ std::string Value::to_string() const
     case CHARS: {
       os << str_value_;
     } break;
+    case DATES: {
+      int32_t date = num_value_.int_value_;
+      os << date_to_str(date);
+    }break;
     default: {
       LOG_WARN("unsupported attr type: %d", attr_type_);
     } break;
@@ -172,7 +186,7 @@ int Value::compare(const Value &other) const
 {
   if (this->attr_type_ == other.attr_type_) {
     switch (this->attr_type_) {
-      case INTS: {
+      case INTS: case DATES: {
         return common::compare_int((void *)&this->num_value_.int_value_, (void *)&other.num_value_.int_value_);
       } break;
       case FLOATS: {
@@ -198,6 +212,7 @@ int Value::compare(const Value &other) const
     float other_data = other.num_value_.int_value_;
     return common::compare_float((void *)&this->num_value_.float_value_, (void *)&other_data);
   }
+  // TODO 可能可以考虑增加字符串与日期的比较
   LOG_WARN("not supported");
   return -1;  // TODO return rc?
 }
@@ -213,7 +228,7 @@ int Value::get_int() const
         return 0;
       }
     }
-    case INTS: {
+    case INTS: case DATES: {
       return num_value_.int_value_;
     }
     case FLOATS: {
@@ -300,4 +315,25 @@ bool Value::get_boolean() const
     }
   }
   return false;
+}
+
+int32_t Value::get_date() const {
+  switch (attr_type_)
+  {
+  case INTS: case DATES: {
+    return num_value_.int_value_;
+  }break;
+  case CHARS: {
+    int32_t date = -1;
+    RC rc = str_to_date(str_value_.c_str(), date);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("Failed to convert data type. str=%s, target_type=%s", str_value_, "DATES");
+    }
+    return date;
+  }break;
+  default: {
+      LOG_WARN("unknown data type. type=%d", attr_type_);
+      return 0;
+  }break;
+  }
 }

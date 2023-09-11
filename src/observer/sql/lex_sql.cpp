@@ -1,4 +1,4 @@
-#line 2 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.cpp"
+#line 2 "lex_sql.cpp"
 /*
 这里的代码会被复制到lex_sql.cpp的最开始位置
 定义yy_size_t的原因是因为flex生成的代码，会使用yy_size_t与其他类型的数字
@@ -22,7 +22,7 @@ do {                                                         \
 }                                                            \
 while (0);
 
-#line 26 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.cpp"
+#line 26 "lex_sql.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -657,7 +657,7 @@ extern int atoi();
 extern double atof();
 
 #define RETURN_TOKEN(token) LOG_DEBUG("%s", #token);return token
-#line 661 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.cpp"
+#line 661 "lex_sql.cpp"
 /* Prevent the need for linking with -lfl */
 #define YY_NO_INPUT 1
 /* 不区分大小写 */
@@ -666,7 +666,7 @@ extern double atof();
 /* 1. 匹配的规则长的优先 */
 /* 2. 写在最前面的优先 */
 /* yylval 就可以认为是 yacc 中 %union 定义的结构体(union 结构) */
-#line 670 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.cpp"
+#line 670 "lex_sql.cpp"
 
 #define INITIAL 0
 #define STR 1
@@ -952,7 +952,7 @@ YY_DECL
 #line 75 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.l"
 
 
-#line 956 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.cpp"
+#line 956 "lex_sql.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1293,7 +1293,7 @@ YY_RULE_SETUP
 #line 139 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.l"
 ECHO;
 	YY_BREAK
-#line 1297 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.cpp"
+#line 1297 "lex_sql.cpp"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(STR):
 	yyterminate();

@@ -185,9 +185,9 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
   const TupleSchema &schema = sql_result->tuple_schema();
   const int cell_num = schema.cell_num();
-
+  // 此处并没有查值
   for (int i = 0; i < cell_num; i++) {
-    const TupleCellSpec &spec = schema.cell_at(i);
+    const TupleCellSpec &spec = schema.cell_at(i);  // 获取schema中的第i项
     const char *alias = spec.alias();
     if (nullptr != alias || alias[0] != 0) {
       if (0 != i) {

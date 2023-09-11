@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_HOME_XIAOMING_MINIOB_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
-# define YY_YY_HOME_XIAOMING_MINIOB_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
+#ifndef YY_YY_YACC_SQL_HPP_INCLUDED
+# define YY_YY_YACC_SQL_HPP_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -130,7 +130,7 @@ union YYSTYPE
   int                               number;
   float                             floats;
 
-#line 134 "/home/xiaoming/miniob/src/observer/sql/parser/yacc_sql.hpp"
+#line 134 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -158,4 +158,4 @@ struct YYLTYPE
 int yyparse (const char * sql_string, ParsedSqlResult * sql_result, void * scanner);
 
 
-#endif /* !YY_YY_HOME_XIAOMING_MINIOB_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED  */
+#endif /* !YY_YY_YACC_SQL_HPP_INCLUDED  */
