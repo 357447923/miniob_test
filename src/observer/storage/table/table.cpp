@@ -236,9 +236,9 @@ RC Table::insert_record(Record &record)
   return rc;
 }
 
-RC Table::update_record(Record &record) {
+RC Table::update_record(Record &record, int offset, Value &value) {
   RC rc = RC::SUCCESS;
-  rc = record_handler_->update_record(record.data(), &record.rid());
+  rc = record_handler_->update_record(offset, value, &record.rid());
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Update record failed. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
     return rc;

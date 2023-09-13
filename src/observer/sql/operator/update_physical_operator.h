@@ -7,9 +7,9 @@
 class UpdatePhysicalOperator : public PhysicalOperator {
 public:
 
-  UpdatePhysicalOperator(Table *table, Value& value);
+  UpdatePhysicalOperator(Table *table, Value& value, const char * field_name);
   
-  virtual ~UpdatePhysicalOperator() = default;
+  virtual ~UpdatePhysicalOperator() override;
 
   PhysicalOperatorType type() const override {
       return PhysicalOperatorType::UPDATE;
@@ -24,6 +24,7 @@ public:
 private:
   Table * table_ = nullptr;
   Value value_;
+  const char * field_name_ = nullptr;
   Trx *trx_ = nullptr;
 };
 
