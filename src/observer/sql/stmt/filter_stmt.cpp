@@ -28,11 +28,12 @@ FilterStmt::~FilterStmt()
   filter_units_.clear();
 }
 
+// TODO 把convert_value抽取到存放类型转换相关方法的文件中
 /**
  * @brief 类型转换，把value中的类型转为meta对应的类型
  * 
  */
-static RC convert_value(Value& value, const FieldMeta *meta) {
+RC convert_value(Value& value, const FieldMeta *meta) {
   AttrType type = value.attr_type();
   AttrType field_type = meta->type();
   RC rc = RC::SUCCESS;

@@ -271,8 +271,7 @@ RC RecordPageHandler::update_record(const char *data, const RID *rid) {
     return RC::RECORD_NOT_EXIST;
   }
 
-  char *origin_data = get_record_data(rid->slot_num);
-  memcpy(origin_data, data, page_header_->record_real_size);
+  
   frame_->mark_dirty();
 
   return RC::SUCCESS;
@@ -452,6 +451,7 @@ RC RecordFileHandler::update_record(const char *data, const RID *rid) {
     LOG_ERROR("Failed to init record_page_handler. page_number=%d. rc=%s", rid->page_num, strrc(rc));
     return rc;
   }
+
   rc = page_handler.update_record(data, rid);
   // TODO
 

@@ -62,6 +62,7 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
         RC rc = str_to_date(values[i].data(), date);
         if (rc != RC::SUCCESS) {
           LOG_TRACE("Str: %s to date fail", values[i].data());
+          return rc;
         }
         Value *value = const_cast<Value *>(&values[i]);
         value->set_date(date);

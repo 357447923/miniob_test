@@ -46,6 +46,7 @@ enum class PhysicalOperatorType
   CALC,
   STRING_LIST,
   DELETE,
+  UPDATE,
   INSERT,
 };
 
