@@ -181,7 +181,7 @@ public:
    */
   RC delete_record(const RID *rid);
 
-  RC update_record(const char *data, const RID *rid);
+  RC update_record(int offset, Value &value, const RID *rid);
 
   /**
    * @brief 获取指定位置的记录数据
@@ -272,7 +272,7 @@ public:
    * 
    * @param rid 待修改的槽位
    */
-  RC update_record(const char *data, const RID *rid);
+  RC update_record(int offset, Value &value, const RID *rid);
   /**
    * @brief 插入一个新的记录到指定文件中，并返回该记录的标识符
    * 

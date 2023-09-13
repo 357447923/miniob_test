@@ -24,6 +24,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/join_logical_operator.h"
 #include "sql/operator/project_logical_operator.h"
 #include "sql/operator/explain_logical_operator.h"
+#include "sql/operator/update_logical_operator.h"
 
 #include "sql/stmt/stmt.h"
 #include "sql/stmt/calc_stmt.h"
@@ -32,6 +33,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/insert_stmt.h"
 #include "sql/stmt/delete_stmt.h"
 #include "sql/stmt/explain_stmt.h"
+#include "sql/stmt/update_stmt.h"
 
 using namespace std;
 
@@ -58,6 +60,11 @@ RC LogicalPlanGenerator::create(Stmt *stmt, unique_ptr<LogicalOperator> &logical
       DeleteStmt *delete_stmt = static_cast<DeleteStmt *>(stmt);
       rc = create_plan(delete_stmt, logical_operator);
     } break;
+
+    case StmtType::UPDATE: {
+      UpdateStmt *update_stmt = static_cast<UpdateStmt *>(stmt);
+      rc = create_plan(update_stmt, logical_operator);
+    }break;
 
     case StmtType::EXPLAIN: {
       ExplainStmt *explain_stmt = static_cast<ExplainStmt *>(stmt);
@@ -164,6 +171,37 @@ RC LogicalPlanGenerator::create_plan(
 
   InsertLogicalOperator *insert_operator = new InsertLogicalOperator(table, values);
   logical_operator.reset(insert_operator);
+  return RC::SUCCESS;
+}
+
+RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, std::unique_ptr<LogicalOperator> &logical_operator) {
+  Table *table = update_stmt->table();
+  FilterStmt *filter_stmt = update_stmt->filter_stmt();
+  // int count = update_stmt->value_amount();
+  
+  // 找到要修改的字段来生成执行计划
+  const FieldMeta *field_meta = table->table_meta().field(update_stmt->attribute_name().c_str());
+  vector<Field> fields;
+  fields.push_back(Field(table, field_meta));
+  // for (int i = 0; i < count; i++) {
+  // }
+  unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, fields, false));
+
+  // 过滤执行计划
+  unique_ptr<LogicalOperator> predicate_oper;
+  RC rc = create_plan(update_stmt->filter_stmt(), predicate_oper);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table, *update_stmt->values(), update_stmt->attribute_name().c_str()));
+  if (predicate_oper) {
+    predicate_oper->add_child(std::move(table_get_oper));
+    update_oper->add_child(std::move(predicate_oper));
+  }else {
+    update_oper->add_child(std::move(table_get_oper));
+  }
+  logical_operator = std::move(update_oper);
   return RC::SUCCESS;
 }
 

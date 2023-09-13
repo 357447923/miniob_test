@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
-#include <sstream>
 #include "rc.h"
 
 inline bool is_leap_year(int year) {
@@ -48,7 +47,10 @@ inline std::string date_to_str(int32_t date) {
     int day = date % 100;
     int month = (date / 100) % 100;
     int year = (date / 10000);
-    sprintf(str, "%4d-%02d-%02d", year, month, day);
+    if (year > 9999) {
+        year = 9999;
+    }
+    sprintf(str, "%d-%02d-%02d", year, month, day);
     return std::move(std::string(str));
 }
 

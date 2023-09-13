@@ -18,12 +18,20 @@ See the Mulan PSL v2 for more details. */
 #include "storage/db/db.h"
 #include "storage/table/table.h"
 
-UpdateStmt::UpdateStmt(Table *table, const Value *values, int value_amount, FilterStmt *filter_stmt)
-    : table_(table), values_(values), value_amount_(value_amount), filter_stmt_(filter_stmt)
+UpdateStmt::UpdateStmt(Table *table, const Value *values, int value_amount, FilterStmt *filter_stmt, const std::string& attribute_name)
+    : table_(table), values_(values), value_amount_(value_amount), filter_stmt_(filter_stmt), attribute_name_(attribute_name)
 {}
+
+// TODO 把convert_value抽取到存放类型转换相关方法的文件中
+/**
+ * @brief 类型转换，把value中的类型转为meta对应的类型
+ * 
+ */
+RC convert_value(Value& value, const FieldMeta *meta);
 
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
 {
+  // 检查db和表名合法性
   const char *table_name = update.relation_name.c_str();
   if (nullptr == db || nullptr == table_name) {
     LOG_WARN("invalid argument. db=%p, table_name=%p",
@@ -38,21 +46,29 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
 
+  // 检查更新的字段合法性
   const TableMeta &table_meta = table->table_meta();
   const FieldMeta *field_meta = table_meta.field(update.attribute_name.c_str());
   if (nullptr == field_meta) {
     LOG_WARN("no such field. table_name=%s, field=%s", table_name, update.attribute_name.c_str());
     return RC::SCHEMA_FIELD_NOT_EXIST;
   }
-  
+
+  // 这里由于UpdateSqlNode中仅仅只有一个value
+  // 所以也仅仅支持一个字段的更新
   const AttrType field_type = field_meta->type();
   const AttrType value_type = update.value.attr_type();
   if (field_type != value_type) {
-    LOG_WARN("field type mismatch. table=%s, field=%s, field_type=%d, value_type=%d",
+    // 对update.value进行数据类型转换
+    Value& value = const_cast<Value&>(update.value);
+    RC rc = convert_value(value, field_meta);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("field type mismatch. table=%s, field=%s, field_type=%d, value_type=%d",
           table_name, field_meta->name(), field_type, value_type);
       return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+    }
   }
-
+  
   std::unordered_map<std::string, Table *> table_map;
   table_map.insert(std::pair<std::string, Table *>(update.relation_name, table));
   // 构造过滤语句
@@ -64,7 +80,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
     return rc;
   }
   // count为1是因为update中只有一个value
-  stmt = new UpdateStmt(table, &update.value, 1, filter_stmt);
+  stmt = new UpdateStmt(table, &update.value, 1, filter_stmt, update.attribute_name);
   return RC::SUCCESS;
 }
 

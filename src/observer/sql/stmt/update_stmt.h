@@ -28,7 +28,7 @@ class UpdateStmt : public Stmt
 {
 public:
   UpdateStmt() = default;
-  UpdateStmt(Table *table, const Value *values, int value_amount, FilterStmt *filter_stmt);
+  UpdateStmt(Table *table, const Value *values, int value_amount, FilterStmt *filter_stmt, const std::string& attribute_name);
 
   StmtType type() const override {
     return StmtType::UPDATE;
@@ -53,10 +53,14 @@ public:
   FilterStmt *filter_stmt() const {
     return filter_stmt_;
   }
+  const std::string& attribute_name() const {
+    return attribute_name_;
+  }
 
 private:
   Table *table_ = nullptr;
   const Value *values_ = nullptr;
   int value_amount_ = 0;
   FilterStmt *filter_stmt_ = nullptr;
+  std::string attribute_name_;
 };
