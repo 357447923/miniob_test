@@ -137,7 +137,7 @@ RC SessionStage::handle_sql(SQLStageEvent *sql_event)
   // 解析sql语句
   rc = parse_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
-    LOG_TRACE("failed to do parse. rc=%s", strrc(rc));
+    LOG_WARN("failed to do parse. rc=%s", strrc(rc));
     return rc;
   }
   // 在框架简介中，此处应该有一个plan Cache
