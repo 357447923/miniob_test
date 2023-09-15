@@ -49,7 +49,7 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
   }
 
   // check fields type
-  for (auto values : value_vector) {
+  for (auto &values : value_vector) {
     const int sys_field_num = table_meta.sys_field_num();
     // 在词法语法解析中，我只把std::vector<Value>进行reverse
     for (int i = 0; i < value_num; i++) {
