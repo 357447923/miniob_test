@@ -1,0 +1,1859 @@
+Grammar
+
+    0 $accept: commands $end
+
+    1 commands: command_wrapper opt_semicolon
+
+    2 command_wrapper: calc_stmt
+    3                | select_stmt
+    4                | insert_stmt
+    5                | update_stmt
+    6                | delete_stmt
+    7                | create_table_stmt
+    8                | drop_table_stmt
+    9                | show_tables_stmt
+   10                | desc_table_stmt
+   11                | create_index_stmt
+   12                | drop_index_stmt
+   13                | sync_stmt
+   14                | begin_stmt
+   15                | commit_stmt
+   16                | rollback_stmt
+   17                | load_data_stmt
+   18                | explain_stmt
+   19                | set_variable_stmt
+   20                | help_stmt
+   21                | exit_stmt
+
+   22 exit_stmt: EXIT
+
+   23 help_stmt: HELP
+
+   24 sync_stmt: SYNC
+
+   25 begin_stmt: TRX_BEGIN
+
+   26 commit_stmt: TRX_COMMIT
+
+   27 rollback_stmt: TRX_ROLLBACK
+
+   28 drop_table_stmt: DROP TABLE ID
+
+   29 show_tables_stmt: SHOW TABLES
+
+   30 desc_table_stmt: DESC ID
+
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID RBRACE
+
+   32 drop_index_stmt: DROP INDEX ID ON ID
+
+   33 create_table_stmt: CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE
+
+   34 attr_def_list: ε
+   35              | COMMA attr_def attr_def_list
+
+   36 attr_def: ID type LBRACE number RBRACE
+   37         | ID type
+
+   38 number: NUMBER
+
+   39 type: INT_T
+   40     | STRING_T
+   41     | FLOAT_T
+   42     | DATE_T
+
+   43 insert_stmt: INSERT INTO ID VALUES LBRACE value value_list RBRACE value_lists
+
+   44 value_lists: ε
+   45            | COMMA LBRACE value value_list RBRACE value_lists
+
+   46 value_list: ε
+   47           | COMMA value value_list
+
+   48 value: NUMBER
+   49      | FLOAT
+   50      | SSS
+
+   51 delete_stmt: DELETE FROM ID where
+
+   52 update_stmt: UPDATE ID SET ID EQ value where
+
+   53 select_stmt: SELECT select_attr FROM ID rel_list where
+
+   54 calc_stmt: CALC expression_list
+
+   55 expression_list: expression
+   56                | expression COMMA expression_list
+
+   57 expression: expression '+' expression
+   58           | expression '-' expression
+   59           | expression '*' expression
+   60           | expression '/' expression
+   61           | LBRACE expression RBRACE
+   62           | '-' expression
+   63           | value
+
+   64 select_attr: '*'
+   65            | rel_attr attr_list
+
+   66 rel_attr: ID
+   67         | ID DOT ID
+
+   68 attr_list: ε
+   69          | COMMA rel_attr attr_list
+
+   70 rel_list: ε
+   71         | COMMA ID rel_list
+
+   72 where: ε
+   73      | WHERE condition_list
+
+   74 condition_list: ε
+   75               | condition
+   76               | condition AND condition_list
+
+   77 condition: rel_attr comp_op value
+   78          | value comp_op value
+   79          | rel_attr comp_op rel_attr
+   80          | value comp_op rel_attr
+
+   81 comp_op: EQ
+   82        | LT
+   83        | GT
+   84        | LE
+   85        | GE
+   86        | NE
+
+   87 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID
+
+   88 explain_stmt: EXPLAIN command_wrapper
+
+   89 set_variable_stmt: SET ID EQ value
+
+   90 opt_semicolon: ε
+   91              | SEMICOLON
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '*' (42) 59 64
+    '+' (43) 57
+    '-' (45) 58 62
+    '/' (47) 60
+    error (256)
+    SEMICOLON (258) 91
+    CREATE (259) 31 33
+    DROP (260) 28 32
+    TABLE (261) 28 33 87
+    TABLES (262) 29
+    INDEX (263) 31 32
+    CALC (264) 54
+    SELECT (265) 53
+    DESC (266) 30
+    SHOW (267) 29
+    SYNC (268) 24
+    INSERT (269) 43
+    DELETE (270) 51
+    UPDATE (271) 52
+    LBRACE (272) 31 33 36 43 45 61
+    RBRACE (273) 31 33 36 43 45 61
+    COMMA (274) 35 45 47 56 69 71
+    TRX_BEGIN (275) 25
+    TRX_COMMIT (276) 26
+    TRX_ROLLBACK (277) 27
+    INT_T (278) 39
+    STRING_T (279) 40
+    FLOAT_T (280) 41
+    DATE_T (281) 42
+    HELP (282) 23
+    EXIT (283) 22
+    DOT (284) 67
+    INTO (285) 43 87
+    VALUES (286) 43
+    FROM (287) 51 53
+    WHERE (288) 73
+    AND (289) 76
+    SET (290) 52 89
+    ON (291) 31 32
+    LOAD (292) 87
+    DATA (293) 87
+    INFILE (294) 87
+    EXPLAIN (295) 88
+    EQ (296) 52 81 89
+    LT (297) 82
+    GT (298) 83
+    LE (299) 84
+    GE (300) 85
+    NE (301) 86
+    NUMBER <number> (302) 38 48
+    FLOAT <floats> (303) 49
+    ID <string> (304) 28 30 31 32 33 36 37 43 51 52 53 66 67 71 87 89
+    SSS <string> (305) 50 87
+    UMINUS (306)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (56)
+        on left: 0
+    commands <sql_node> (57)
+        on left: 1
+        on right: 0
+    command_wrapper <sql_node> (58)
+        on left: 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21
+        on right: 1 88
+    exit_stmt <sql_node> (59)
+        on left: 22
+        on right: 21
+    help_stmt <sql_node> (60)
+        on left: 23
+        on right: 20
+    sync_stmt <sql_node> (61)
+        on left: 24
+        on right: 13
+    begin_stmt <sql_node> (62)
+        on left: 25
+        on right: 14
+    commit_stmt <sql_node> (63)
+        on left: 26
+        on right: 15
+    rollback_stmt <sql_node> (64)
+        on left: 27
+        on right: 16
+    drop_table_stmt <sql_node> (65)
+        on left: 28
+        on right: 8
+    show_tables_stmt <sql_node> (66)
+        on left: 29
+        on right: 9
+    desc_table_stmt <sql_node> (67)
+        on left: 30
+        on right: 10
+    create_index_stmt <sql_node> (68)
+        on left: 31
+        on right: 11
+    drop_index_stmt <sql_node> (69)
+        on left: 32
+        on right: 12
+    create_table_stmt <sql_node> (70)
+        on left: 33
+        on right: 7
+    attr_def_list <attr_infos> (71)
+        on left: 34 35
+        on right: 33 35
+    attr_def <attr_info> (72)
+        on left: 36 37
+        on right: 33 35
+    number <number> (73)
+        on left: 38
+        on right: 36
+    type <number> (74)
+        on left: 39 40 41 42
+        on right: 36 37
+    insert_stmt <sql_node> (75)
+        on left: 43
+        on right: 4
+    value_lists <value_lists> (76)
+        on left: 44 45
+        on right: 43 45
+    value_list <value_list> (77)
+        on left: 46 47
+        on right: 43 45 47
+    value <value> (78)
+        on left: 48 49 50
+        on right: 43 45 47 52 63 77 78 80 89
+    delete_stmt <sql_node> (79)
+        on left: 51
+        on right: 6
+    update_stmt <sql_node> (80)
+        on left: 52
+        on right: 5
+    select_stmt <sql_node> (81)
+        on left: 53
+        on right: 3
+    calc_stmt <sql_node> (82)
+        on left: 54
+        on right: 2
+    expression_list <expression_list> (83)
+        on left: 55 56
+        on right: 54 56
+    expression <expression> (84)
+        on left: 57 58 59 60 61 62 63
+        on right: 55 56 57 58 59 60 61 62
+    select_attr <rel_attr_list> (85)
+        on left: 64 65
+        on right: 53
+    rel_attr <rel_attr> (86)
+        on left: 66 67
+        on right: 65 69 77 79 80
+    attr_list <rel_attr_list> (87)
+        on left: 68 69
+        on right: 65 69
+    rel_list <relation_list> (88)
+        on left: 70 71
+        on right: 53 71
+    where <condition_list> (89)
+        on left: 72 73
+        on right: 51 52 53
+    condition_list <condition_list> (90)
+        on left: 74 75 76
+        on right: 73 76
+    condition <condition> (91)
+        on left: 77 78 79 80
+        on right: 75 76
+    comp_op <comp> (92)
+        on left: 81 82 83 84 85 86
+        on right: 77 78 79 80
+    load_data_stmt <sql_node> (93)
+        on left: 87
+        on right: 17
+    explain_stmt <sql_node> (94)
+        on left: 88
+        on right: 18
+    set_variable_stmt <sql_node> (95)
+        on left: 89
+        on right: 19
+    opt_semicolon (96)
+        on left: 90 91
+        on right: 1
+
+
+State 0
+
+    0 $accept: • commands $end
+
+    CREATE        shift, and go to state 1
+    DROP          shift, and go to state 2
+    CALC          shift, and go to state 3
+    SELECT        shift, and go to state 4
+    DESC          shift, and go to state 5
+    SHOW          shift, and go to state 6
+    SYNC          shift, and go to state 7
+    INSERT        shift, and go to state 8
+    DELETE        shift, and go to state 9
+    UPDATE        shift, and go to state 10
+    TRX_BEGIN     shift, and go to state 11
+    TRX_COMMIT    shift, and go to state 12
+    TRX_ROLLBACK  shift, and go to state 13
+    HELP          shift, and go to state 14
+    EXIT          shift, and go to state 15
+    SET           shift, and go to state 16
+    LOAD          shift, and go to state 17
+    EXPLAIN       shift, and go to state 18
+
+    commands           go to state 19
+    command_wrapper    go to state 20
+    exit_stmt          go to state 21
+    help_stmt          go to state 22
+    sync_stmt          go to state 23
+    begin_stmt         go to state 24
+    commit_stmt        go to state 25
+    rollback_stmt      go to state 26
+    drop_table_stmt    go to state 27
+    show_tables_stmt   go to state 28
+    desc_table_stmt    go to state 29
+    create_index_stmt  go to state 30
+    drop_index_stmt    go to state 31
+    create_table_stmt  go to state 32
+    insert_stmt        go to state 33
+    delete_stmt        go to state 34
+    update_stmt        go to state 35
+    select_stmt        go to state 36
+    calc_stmt          go to state 37
+    load_data_stmt     go to state 38
+    explain_stmt       go to state 39
+    set_variable_stmt  go to state 40
+
+
+State 1
+
+   31 create_index_stmt: CREATE • INDEX ID ON ID LBRACE ID RBRACE
+   33 create_table_stmt: CREATE • TABLE ID LBRACE attr_def attr_def_list RBRACE
+
+    TABLE  shift, and go to state 41
+    INDEX  shift, and go to state 42
+
+
+State 2
+
+   28 drop_table_stmt: DROP • TABLE ID
+   32 drop_index_stmt: DROP • INDEX ID ON ID
+
+    TABLE  shift, and go to state 43
+    INDEX  shift, and go to state 44
+
+
+State 3
+
+   54 calc_stmt: CALC • expression_list
+
+    LBRACE  shift, and go to state 45
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+    '-'     shift, and go to state 49
+
+    value            go to state 50
+    expression_list  go to state 51
+    expression       go to state 52
+
+
+State 4
+
+   53 select_stmt: SELECT • select_attr FROM ID rel_list where
+
+    ID   shift, and go to state 53
+    '*'  shift, and go to state 54
+
+    select_attr  go to state 55
+    rel_attr     go to state 56
+
+
+State 5
+
+   30 desc_table_stmt: DESC • ID
+
+    ID  shift, and go to state 57
+
+
+State 6
+
+   29 show_tables_stmt: SHOW • TABLES
+
+    TABLES  shift, and go to state 58
+
+
+State 7
+
+   24 sync_stmt: SYNC •
+
+    $default  reduce using rule 24 (sync_stmt)
+
+
+State 8
+
+   43 insert_stmt: INSERT • INTO ID VALUES LBRACE value value_list RBRACE value_lists
+
+    INTO  shift, and go to state 59
+
+
+State 9
+
+   51 delete_stmt: DELETE • FROM ID where
+
+    FROM  shift, and go to state 60
+
+
+State 10
+
+   52 update_stmt: UPDATE • ID SET ID EQ value where
+
+    ID  shift, and go to state 61
+
+
+State 11
+
+   25 begin_stmt: TRX_BEGIN •
+
+    $default  reduce using rule 25 (begin_stmt)
+
+
+State 12
+
+   26 commit_stmt: TRX_COMMIT •
+
+    $default  reduce using rule 26 (commit_stmt)
+
+
+State 13
+
+   27 rollback_stmt: TRX_ROLLBACK •
+
+    $default  reduce using rule 27 (rollback_stmt)
+
+
+State 14
+
+   23 help_stmt: HELP •
+
+    $default  reduce using rule 23 (help_stmt)
+
+
+State 15
+
+   22 exit_stmt: EXIT •
+
+    $default  reduce using rule 22 (exit_stmt)
+
+
+State 16
+
+   89 set_variable_stmt: SET • ID EQ value
+
+    ID  shift, and go to state 62
+
+
+State 17
+
+   87 load_data_stmt: LOAD • DATA INFILE SSS INTO TABLE ID
+
+    DATA  shift, and go to state 63
+
+
+State 18
+
+   88 explain_stmt: EXPLAIN • command_wrapper
+
+    CREATE        shift, and go to state 1
+    DROP          shift, and go to state 2
+    CALC          shift, and go to state 3
+    SELECT        shift, and go to state 4
+    DESC          shift, and go to state 5
+    SHOW          shift, and go to state 6
+    SYNC          shift, and go to state 7
+    INSERT        shift, and go to state 8
+    DELETE        shift, and go to state 9
+    UPDATE        shift, and go to state 10
+    TRX_BEGIN     shift, and go to state 11
+    TRX_COMMIT    shift, and go to state 12
+    TRX_ROLLBACK  shift, and go to state 13
+    HELP          shift, and go to state 14
+    EXIT          shift, and go to state 15
+    SET           shift, and go to state 16
+    LOAD          shift, and go to state 17
+    EXPLAIN       shift, and go to state 18
+
+    command_wrapper    go to state 64
+    exit_stmt          go to state 21
+    help_stmt          go to state 22
+    sync_stmt          go to state 23
+    begin_stmt         go to state 24
+    commit_stmt        go to state 25
+    rollback_stmt      go to state 26
+    drop_table_stmt    go to state 27
+    show_tables_stmt   go to state 28
+    desc_table_stmt    go to state 29
+    create_index_stmt  go to state 30
+    drop_index_stmt    go to state 31
+    create_table_stmt  go to state 32
+    insert_stmt        go to state 33
+    delete_stmt        go to state 34
+    update_stmt        go to state 35
+    select_stmt        go to state 36
+    calc_stmt          go to state 37
+    load_data_stmt     go to state 38
+    explain_stmt       go to state 39
+    set_variable_stmt  go to state 40
+
+
+State 19
+
+    0 $accept: commands • $end
+
+    $end  shift, and go to state 65
+
+
+State 20
+
+    1 commands: command_wrapper • opt_semicolon
+
+    SEMICOLON  shift, and go to state 66
+
+    $default  reduce using rule 90 (opt_semicolon)
+
+    opt_semicolon  go to state 67
+
+
+State 21
+
+   21 command_wrapper: exit_stmt •
+
+    $default  reduce using rule 21 (command_wrapper)
+
+
+State 22
+
+   20 command_wrapper: help_stmt •
+
+    $default  reduce using rule 20 (command_wrapper)
+
+
+State 23
+
+   13 command_wrapper: sync_stmt •
+
+    $default  reduce using rule 13 (command_wrapper)
+
+
+State 24
+
+   14 command_wrapper: begin_stmt •
+
+    $default  reduce using rule 14 (command_wrapper)
+
+
+State 25
+
+   15 command_wrapper: commit_stmt •
+
+    $default  reduce using rule 15 (command_wrapper)
+
+
+State 26
+
+   16 command_wrapper: rollback_stmt •
+
+    $default  reduce using rule 16 (command_wrapper)
+
+
+State 27
+
+    8 command_wrapper: drop_table_stmt •
+
+    $default  reduce using rule 8 (command_wrapper)
+
+
+State 28
+
+    9 command_wrapper: show_tables_stmt •
+
+    $default  reduce using rule 9 (command_wrapper)
+
+
+State 29
+
+   10 command_wrapper: desc_table_stmt •
+
+    $default  reduce using rule 10 (command_wrapper)
+
+
+State 30
+
+   11 command_wrapper: create_index_stmt •
+
+    $default  reduce using rule 11 (command_wrapper)
+
+
+State 31
+
+   12 command_wrapper: drop_index_stmt •
+
+    $default  reduce using rule 12 (command_wrapper)
+
+
+State 32
+
+    7 command_wrapper: create_table_stmt •
+
+    $default  reduce using rule 7 (command_wrapper)
+
+
+State 33
+
+    4 command_wrapper: insert_stmt •
+
+    $default  reduce using rule 4 (command_wrapper)
+
+
+State 34
+
+    6 command_wrapper: delete_stmt •
+
+    $default  reduce using rule 6 (command_wrapper)
+
+
+State 35
+
+    5 command_wrapper: update_stmt •
+
+    $default  reduce using rule 5 (command_wrapper)
+
+
+State 36
+
+    3 command_wrapper: select_stmt •
+
+    $default  reduce using rule 3 (command_wrapper)
+
+
+State 37
+
+    2 command_wrapper: calc_stmt •
+
+    $default  reduce using rule 2 (command_wrapper)
+
+
+State 38
+
+   17 command_wrapper: load_data_stmt •
+
+    $default  reduce using rule 17 (command_wrapper)
+
+
+State 39
+
+   18 command_wrapper: explain_stmt •
+
+    $default  reduce using rule 18 (command_wrapper)
+
+
+State 40
+
+   19 command_wrapper: set_variable_stmt •
+
+    $default  reduce using rule 19 (command_wrapper)
+
+
+State 41
+
+   33 create_table_stmt: CREATE TABLE • ID LBRACE attr_def attr_def_list RBRACE
+
+    ID  shift, and go to state 68
+
+
+State 42
+
+   31 create_index_stmt: CREATE INDEX • ID ON ID LBRACE ID RBRACE
+
+    ID  shift, and go to state 69
+
+
+State 43
+
+   28 drop_table_stmt: DROP TABLE • ID
+
+    ID  shift, and go to state 70
+
+
+State 44
+
+   32 drop_index_stmt: DROP INDEX • ID ON ID
+
+    ID  shift, and go to state 71
+
+
+State 45
+
+   61 expression: LBRACE • expression RBRACE
+
+    LBRACE  shift, and go to state 45
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+    '-'     shift, and go to state 49
+
+    value       go to state 50
+    expression  go to state 72
+
+
+State 46
+
+   48 value: NUMBER •
+
+    $default  reduce using rule 48 (value)
+
+
+State 47
+
+   49 value: FLOAT •
+
+    $default  reduce using rule 49 (value)
+
+
+State 48
+
+   50 value: SSS •
+
+    $default  reduce using rule 50 (value)
+
+
+State 49
+
+   62 expression: '-' • expression
+
+    LBRACE  shift, and go to state 45
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+    '-'     shift, and go to state 49
+
+    value       go to state 50
+    expression  go to state 73
+
+
+State 50
+
+   63 expression: value •
+
+    $default  reduce using rule 63 (expression)
+
+
+State 51
+
+   54 calc_stmt: CALC expression_list •
+
+    $default  reduce using rule 54 (calc_stmt)
+
+
+State 52
+
+   55 expression_list: expression •
+   56                | expression • COMMA expression_list
+   57 expression: expression • '+' expression
+   58           | expression • '-' expression
+   59           | expression • '*' expression
+   60           | expression • '/' expression
+
+    COMMA  shift, and go to state 74
+    '+'    shift, and go to state 75
+    '-'    shift, and go to state 76
+    '*'    shift, and go to state 77
+    '/'    shift, and go to state 78
+
+    $default  reduce using rule 55 (expression_list)
+
+
+State 53
+
+   66 rel_attr: ID •
+   67         | ID • DOT ID
+
+    DOT  shift, and go to state 79
+
+    $default  reduce using rule 66 (rel_attr)
+
+
+State 54
+
+   64 select_attr: '*' •
+
+    $default  reduce using rule 64 (select_attr)
+
+
+State 55
+
+   53 select_stmt: SELECT select_attr • FROM ID rel_list where
+
+    FROM  shift, and go to state 80
+
+
+State 56
+
+   65 select_attr: rel_attr • attr_list
+
+    COMMA  shift, and go to state 81
+
+    $default  reduce using rule 68 (attr_list)
+
+    attr_list  go to state 82
+
+
+State 57
+
+   30 desc_table_stmt: DESC ID •
+
+    $default  reduce using rule 30 (desc_table_stmt)
+
+
+State 58
+
+   29 show_tables_stmt: SHOW TABLES •
+
+    $default  reduce using rule 29 (show_tables_stmt)
+
+
+State 59
+
+   43 insert_stmt: INSERT INTO • ID VALUES LBRACE value value_list RBRACE value_lists
+
+    ID  shift, and go to state 83
+
+
+State 60
+
+   51 delete_stmt: DELETE FROM • ID where
+
+    ID  shift, and go to state 84
+
+
+State 61
+
+   52 update_stmt: UPDATE ID • SET ID EQ value where
+
+    SET  shift, and go to state 85
+
+
+State 62
+
+   89 set_variable_stmt: SET ID • EQ value
+
+    EQ  shift, and go to state 86
+
+
+State 63
+
+   87 load_data_stmt: LOAD DATA • INFILE SSS INTO TABLE ID
+
+    INFILE  shift, and go to state 87
+
+
+State 64
+
+   88 explain_stmt: EXPLAIN command_wrapper •
+
+    $default  reduce using rule 88 (explain_stmt)
+
+
+State 65
+
+    0 $accept: commands $end •
+
+    $default  accept
+
+
+State 66
+
+   91 opt_semicolon: SEMICOLON •
+
+    $default  reduce using rule 91 (opt_semicolon)
+
+
+State 67
+
+    1 commands: command_wrapper opt_semicolon •
+
+    $default  reduce using rule 1 (commands)
+
+
+State 68
+
+   33 create_table_stmt: CREATE TABLE ID • LBRACE attr_def attr_def_list RBRACE
+
+    LBRACE  shift, and go to state 88
+
+
+State 69
+
+   31 create_index_stmt: CREATE INDEX ID • ON ID LBRACE ID RBRACE
+
+    ON  shift, and go to state 89
+
+
+State 70
+
+   28 drop_table_stmt: DROP TABLE ID •
+
+    $default  reduce using rule 28 (drop_table_stmt)
+
+
+State 71
+
+   32 drop_index_stmt: DROP INDEX ID • ON ID
+
+    ON  shift, and go to state 90
+
+
+State 72
+
+   57 expression: expression • '+' expression
+   58           | expression • '-' expression
+   59           | expression • '*' expression
+   60           | expression • '/' expression
+   61           | LBRACE expression • RBRACE
+
+    RBRACE  shift, and go to state 91
+    '+'     shift, and go to state 75
+    '-'     shift, and go to state 76
+    '*'     shift, and go to state 77
+    '/'     shift, and go to state 78
+
+
+State 73
+
+   57 expression: expression • '+' expression
+   58           | expression • '-' expression
+   59           | expression • '*' expression
+   60           | expression • '/' expression
+   62           | '-' expression •
+
+    $default  reduce using rule 62 (expression)
+
+
+State 74
+
+   56 expression_list: expression COMMA • expression_list
+
+    LBRACE  shift, and go to state 45
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+    '-'     shift, and go to state 49
+
+    value            go to state 50
+    expression_list  go to state 92
+    expression       go to state 52
+
+
+State 75
+
+   57 expression: expression '+' • expression
+
+    LBRACE  shift, and go to state 45
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+    '-'     shift, and go to state 49
+
+    value       go to state 50
+    expression  go to state 93
+
+
+State 76
+
+   58 expression: expression '-' • expression
+
+    LBRACE  shift, and go to state 45
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+    '-'     shift, and go to state 49
+
+    value       go to state 50
+    expression  go to state 94
+
+
+State 77
+
+   59 expression: expression '*' • expression
+
+    LBRACE  shift, and go to state 45
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+    '-'     shift, and go to state 49
+
+    value       go to state 50
+    expression  go to state 95
+
+
+State 78
+
+   60 expression: expression '/' • expression
+
+    LBRACE  shift, and go to state 45
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+    '-'     shift, and go to state 49
+
+    value       go to state 50
+    expression  go to state 96
+
+
+State 79
+
+   67 rel_attr: ID DOT • ID
+
+    ID  shift, and go to state 97
+
+
+State 80
+
+   53 select_stmt: SELECT select_attr FROM • ID rel_list where
+
+    ID  shift, and go to state 98
+
+
+State 81
+
+   69 attr_list: COMMA • rel_attr attr_list
+
+    ID  shift, and go to state 53
+
+    rel_attr  go to state 99
+
+
+State 82
+
+   65 select_attr: rel_attr attr_list •
+
+    $default  reduce using rule 65 (select_attr)
+
+
+State 83
+
+   43 insert_stmt: INSERT INTO ID • VALUES LBRACE value value_list RBRACE value_lists
+
+    VALUES  shift, and go to state 100
+
+
+State 84
+
+   51 delete_stmt: DELETE FROM ID • where
+
+    WHERE  shift, and go to state 101
+
+    $default  reduce using rule 72 (where)
+
+    where  go to state 102
+
+
+State 85
+
+   52 update_stmt: UPDATE ID SET • ID EQ value where
+
+    ID  shift, and go to state 103
+
+
+State 86
+
+   89 set_variable_stmt: SET ID EQ • value
+
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+
+    value  go to state 104
+
+
+State 87
+
+   87 load_data_stmt: LOAD DATA INFILE • SSS INTO TABLE ID
+
+    SSS  shift, and go to state 105
+
+
+State 88
+
+   33 create_table_stmt: CREATE TABLE ID LBRACE • attr_def attr_def_list RBRACE
+
+    ID  shift, and go to state 106
+
+    attr_def  go to state 107
+
+
+State 89
+
+   31 create_index_stmt: CREATE INDEX ID ON • ID LBRACE ID RBRACE
+
+    ID  shift, and go to state 108
+
+
+State 90
+
+   32 drop_index_stmt: DROP INDEX ID ON • ID
+
+    ID  shift, and go to state 109
+
+
+State 91
+
+   61 expression: LBRACE expression RBRACE •
+
+    $default  reduce using rule 61 (expression)
+
+
+State 92
+
+   56 expression_list: expression COMMA expression_list •
+
+    $default  reduce using rule 56 (expression_list)
+
+
+State 93
+
+   57 expression: expression • '+' expression
+   57           | expression '+' expression •
+   58           | expression • '-' expression
+   59           | expression • '*' expression
+   60           | expression • '/' expression
+
+    '*'  shift, and go to state 77
+    '/'  shift, and go to state 78
+
+    $default  reduce using rule 57 (expression)
+
+
+State 94
+
+   57 expression: expression • '+' expression
+   58           | expression • '-' expression
+   58           | expression '-' expression •
+   59           | expression • '*' expression
+   60           | expression • '/' expression
+
+    '*'  shift, and go to state 77
+    '/'  shift, and go to state 78
+
+    $default  reduce using rule 58 (expression)
+
+
+State 95
+
+   57 expression: expression • '+' expression
+   58           | expression • '-' expression
+   59           | expression • '*' expression
+   59           | expression '*' expression •
+   60           | expression • '/' expression
+
+    $default  reduce using rule 59 (expression)
+
+
+State 96
+
+   57 expression: expression • '+' expression
+   58           | expression • '-' expression
+   59           | expression • '*' expression
+   60           | expression • '/' expression
+   60           | expression '/' expression •
+
+    $default  reduce using rule 60 (expression)
+
+
+State 97
+
+   67 rel_attr: ID DOT ID •
+
+    $default  reduce using rule 67 (rel_attr)
+
+
+State 98
+
+   53 select_stmt: SELECT select_attr FROM ID • rel_list where
+
+    COMMA  shift, and go to state 110
+
+    $default  reduce using rule 70 (rel_list)
+
+    rel_list  go to state 111
+
+
+State 99
+
+   69 attr_list: COMMA rel_attr • attr_list
+
+    COMMA  shift, and go to state 81
+
+    $default  reduce using rule 68 (attr_list)
+
+    attr_list  go to state 112
+
+
+State 100
+
+   43 insert_stmt: INSERT INTO ID VALUES • LBRACE value value_list RBRACE value_lists
+
+    LBRACE  shift, and go to state 113
+
+
+State 101
+
+   73 where: WHERE • condition_list
+
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    ID      shift, and go to state 53
+    SSS     shift, and go to state 48
+
+    $default  reduce using rule 74 (condition_list)
+
+    value           go to state 114
+    rel_attr        go to state 115
+    condition_list  go to state 116
+    condition       go to state 117
+
+
+State 102
+
+   51 delete_stmt: DELETE FROM ID where •
+
+    $default  reduce using rule 51 (delete_stmt)
+
+
+State 103
+
+   52 update_stmt: UPDATE ID SET ID • EQ value where
+
+    EQ  shift, and go to state 118
+
+
+State 104
+
+   89 set_variable_stmt: SET ID EQ value •
+
+    $default  reduce using rule 89 (set_variable_stmt)
+
+
+State 105
+
+   87 load_data_stmt: LOAD DATA INFILE SSS • INTO TABLE ID
+
+    INTO  shift, and go to state 119
+
+
+State 106
+
+   36 attr_def: ID • type LBRACE number RBRACE
+   37         | ID • type
+
+    INT_T     shift, and go to state 120
+    STRING_T  shift, and go to state 121
+    FLOAT_T   shift, and go to state 122
+    DATE_T    shift, and go to state 123
+
+    type  go to state 124
+
+
+State 107
+
+   33 create_table_stmt: CREATE TABLE ID LBRACE attr_def • attr_def_list RBRACE
+
+    COMMA  shift, and go to state 125
+
+    $default  reduce using rule 34 (attr_def_list)
+
+    attr_def_list  go to state 126
+
+
+State 108
+
+   31 create_index_stmt: CREATE INDEX ID ON ID • LBRACE ID RBRACE
+
+    LBRACE  shift, and go to state 127
+
+
+State 109
+
+   32 drop_index_stmt: DROP INDEX ID ON ID •
+
+    $default  reduce using rule 32 (drop_index_stmt)
+
+
+State 110
+
+   71 rel_list: COMMA • ID rel_list
+
+    ID  shift, and go to state 128
+
+
+State 111
+
+   53 select_stmt: SELECT select_attr FROM ID rel_list • where
+
+    WHERE  shift, and go to state 101
+
+    $default  reduce using rule 72 (where)
+
+    where  go to state 129
+
+
+State 112
+
+   69 attr_list: COMMA rel_attr attr_list •
+
+    $default  reduce using rule 69 (attr_list)
+
+
+State 113
+
+   43 insert_stmt: INSERT INTO ID VALUES LBRACE • value value_list RBRACE value_lists
+
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+
+    value  go to state 130
+
+
+State 114
+
+   78 condition: value • comp_op value
+   80          | value • comp_op rel_attr
+
+    EQ  shift, and go to state 131
+    LT  shift, and go to state 132
+    GT  shift, and go to state 133
+    LE  shift, and go to state 134
+    GE  shift, and go to state 135
+    NE  shift, and go to state 136
+
+    comp_op  go to state 137
+
+
+State 115
+
+   77 condition: rel_attr • comp_op value
+   79          | rel_attr • comp_op rel_attr
+
+    EQ  shift, and go to state 131
+    LT  shift, and go to state 132
+    GT  shift, and go to state 133
+    LE  shift, and go to state 134
+    GE  shift, and go to state 135
+    NE  shift, and go to state 136
+
+    comp_op  go to state 138
+
+
+State 116
+
+   73 where: WHERE condition_list •
+
+    $default  reduce using rule 73 (where)
+
+
+State 117
+
+   75 condition_list: condition •
+   76               | condition • AND condition_list
+
+    AND  shift, and go to state 139
+
+    $default  reduce using rule 75 (condition_list)
+
+
+State 118
+
+   52 update_stmt: UPDATE ID SET ID EQ • value where
+
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+
+    value  go to state 140
+
+
+State 119
+
+   87 load_data_stmt: LOAD DATA INFILE SSS INTO • TABLE ID
+
+    TABLE  shift, and go to state 141
+
+
+State 120
+
+   39 type: INT_T •
+
+    $default  reduce using rule 39 (type)
+
+
+State 121
+
+   40 type: STRING_T •
+
+    $default  reduce using rule 40 (type)
+
+
+State 122
+
+   41 type: FLOAT_T •
+
+    $default  reduce using rule 41 (type)
+
+
+State 123
+
+   42 type: DATE_T •
+
+    $default  reduce using rule 42 (type)
+
+
+State 124
+
+   36 attr_def: ID type • LBRACE number RBRACE
+   37         | ID type •
+
+    LBRACE  shift, and go to state 142
+
+    $default  reduce using rule 37 (attr_def)
+
+
+State 125
+
+   35 attr_def_list: COMMA • attr_def attr_def_list
+
+    ID  shift, and go to state 106
+
+    attr_def  go to state 143
+
+
+State 126
+
+   33 create_table_stmt: CREATE TABLE ID LBRACE attr_def attr_def_list • RBRACE
+
+    RBRACE  shift, and go to state 144
+
+
+State 127
+
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE • ID RBRACE
+
+    ID  shift, and go to state 145
+
+
+State 128
+
+   71 rel_list: COMMA ID • rel_list
+
+    COMMA  shift, and go to state 110
+
+    $default  reduce using rule 70 (rel_list)
+
+    rel_list  go to state 146
+
+
+State 129
+
+   53 select_stmt: SELECT select_attr FROM ID rel_list where •
+
+    $default  reduce using rule 53 (select_stmt)
+
+
+State 130
+
+   43 insert_stmt: INSERT INTO ID VALUES LBRACE value • value_list RBRACE value_lists
+
+    COMMA  shift, and go to state 147
+
+    $default  reduce using rule 46 (value_list)
+
+    value_list  go to state 148
+
+
+State 131
+
+   81 comp_op: EQ •
+
+    $default  reduce using rule 81 (comp_op)
+
+
+State 132
+
+   82 comp_op: LT •
+
+    $default  reduce using rule 82 (comp_op)
+
+
+State 133
+
+   83 comp_op: GT •
+
+    $default  reduce using rule 83 (comp_op)
+
+
+State 134
+
+   84 comp_op: LE •
+
+    $default  reduce using rule 84 (comp_op)
+
+
+State 135
+
+   85 comp_op: GE •
+
+    $default  reduce using rule 85 (comp_op)
+
+
+State 136
+
+   86 comp_op: NE •
+
+    $default  reduce using rule 86 (comp_op)
+
+
+State 137
+
+   78 condition: value comp_op • value
+   80          | value comp_op • rel_attr
+
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    ID      shift, and go to state 53
+    SSS     shift, and go to state 48
+
+    value     go to state 149
+    rel_attr  go to state 150
+
+
+State 138
+
+   77 condition: rel_attr comp_op • value
+   79          | rel_attr comp_op • rel_attr
+
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    ID      shift, and go to state 53
+    SSS     shift, and go to state 48
+
+    value     go to state 151
+    rel_attr  go to state 152
+
+
+State 139
+
+   76 condition_list: condition AND • condition_list
+
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    ID      shift, and go to state 53
+    SSS     shift, and go to state 48
+
+    $default  reduce using rule 74 (condition_list)
+
+    value           go to state 114
+    rel_attr        go to state 115
+    condition_list  go to state 153
+    condition       go to state 117
+
+
+State 140
+
+   52 update_stmt: UPDATE ID SET ID EQ value • where
+
+    WHERE  shift, and go to state 101
+
+    $default  reduce using rule 72 (where)
+
+    where  go to state 154
+
+
+State 141
+
+   87 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE • ID
+
+    ID  shift, and go to state 155
+
+
+State 142
+
+   36 attr_def: ID type LBRACE • number RBRACE
+
+    NUMBER  shift, and go to state 156
+
+    number  go to state 157
+
+
+State 143
+
+   35 attr_def_list: COMMA attr_def • attr_def_list
+
+    COMMA  shift, and go to state 125
+
+    $default  reduce using rule 34 (attr_def_list)
+
+    attr_def_list  go to state 158
+
+
+State 144
+
+   33 create_table_stmt: CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE •
+
+    $default  reduce using rule 33 (create_table_stmt)
+
+
+State 145
+
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID • RBRACE
+
+    RBRACE  shift, and go to state 159
+
+
+State 146
+
+   71 rel_list: COMMA ID rel_list •
+
+    $default  reduce using rule 71 (rel_list)
+
+
+State 147
+
+   47 value_list: COMMA • value value_list
+
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+
+    value  go to state 160
+
+
+State 148
+
+   43 insert_stmt: INSERT INTO ID VALUES LBRACE value value_list • RBRACE value_lists
+
+    RBRACE  shift, and go to state 161
+
+
+State 149
+
+   78 condition: value comp_op value •
+
+    $default  reduce using rule 78 (condition)
+
+
+State 150
+
+   80 condition: value comp_op rel_attr •
+
+    $default  reduce using rule 80 (condition)
+
+
+State 151
+
+   77 condition: rel_attr comp_op value •
+
+    $default  reduce using rule 77 (condition)
+
+
+State 152
+
+   79 condition: rel_attr comp_op rel_attr •
+
+    $default  reduce using rule 79 (condition)
+
+
+State 153
+
+   76 condition_list: condition AND condition_list •
+
+    $default  reduce using rule 76 (condition_list)
+
+
+State 154
+
+   52 update_stmt: UPDATE ID SET ID EQ value where •
+
+    $default  reduce using rule 52 (update_stmt)
+
+
+State 155
+
+   87 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID •
+
+    $default  reduce using rule 87 (load_data_stmt)
+
+
+State 156
+
+   38 number: NUMBER •
+
+    $default  reduce using rule 38 (number)
+
+
+State 157
+
+   36 attr_def: ID type LBRACE number • RBRACE
+
+    RBRACE  shift, and go to state 162
+
+
+State 158
+
+   35 attr_def_list: COMMA attr_def attr_def_list •
+
+    $default  reduce using rule 35 (attr_def_list)
+
+
+State 159
+
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID RBRACE •
+
+    $default  reduce using rule 31 (create_index_stmt)
+
+
+State 160
+
+   47 value_list: COMMA value • value_list
+
+    COMMA  shift, and go to state 147
+
+    $default  reduce using rule 46 (value_list)
+
+    value_list  go to state 163
+
+
+State 161
+
+   43 insert_stmt: INSERT INTO ID VALUES LBRACE value value_list RBRACE • value_lists
+
+    COMMA  shift, and go to state 164
+
+    $default  reduce using rule 44 (value_lists)
+
+    value_lists  go to state 165
+
+
+State 162
+
+   36 attr_def: ID type LBRACE number RBRACE •
+
+    $default  reduce using rule 36 (attr_def)
+
+
+State 163
+
+   47 value_list: COMMA value value_list •
+
+    $default  reduce using rule 47 (value_list)
+
+
+State 164
+
+   45 value_lists: COMMA • LBRACE value value_list RBRACE value_lists
+
+    LBRACE  shift, and go to state 166
+
+
+State 165
+
+   43 insert_stmt: INSERT INTO ID VALUES LBRACE value value_list RBRACE value_lists •
+
+    $default  reduce using rule 43 (insert_stmt)
+
+
+State 166
+
+   45 value_lists: COMMA LBRACE • value value_list RBRACE value_lists
+
+    NUMBER  shift, and go to state 46
+    FLOAT   shift, and go to state 47
+    SSS     shift, and go to state 48
+
+    value  go to state 167
+
+
+State 167
+
+   45 value_lists: COMMA LBRACE value • value_list RBRACE value_lists
+
+    COMMA  shift, and go to state 147
+
+    $default  reduce using rule 46 (value_list)
+
+    value_list  go to state 168
+
+
+State 168
+
+   45 value_lists: COMMA LBRACE value value_list • RBRACE value_lists
+
+    RBRACE  shift, and go to state 169
+
+
+State 169
+
+   45 value_lists: COMMA LBRACE value value_list RBRACE • value_lists
+
+    COMMA  shift, and go to state 164
+
+    $default  reduce using rule 44 (value_lists)
+
+    value_lists  go to state 170
+
+
+State 170
+
+   45 value_lists: COMMA LBRACE value value_list RBRACE value_lists •
+
+    $default  reduce using rule 45 (value_lists)

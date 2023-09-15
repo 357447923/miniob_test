@@ -83,10 +83,6 @@ RC CommandExecutor::execute(SQLStageEvent *sql_event)
       return executor.execute(sql_event);
     }
 
-    case StmtType::UPDATE: {
-      
-    }
-
     case StmtType::EXIT: {
       return RC::SUCCESS;
     }
