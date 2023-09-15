@@ -18,7 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/table/table.h"
 #include "common/date.h"
 
-InsertStmt::InsertStmt(Table *table, const std::vector<Value> *values, int value_amount)
+InsertStmt::InsertStmt(Table *table, const std::vector<std::vector<Value>> *values, int value_amount)
     : table_(table), values_(values), value_amount_(value_amount)
 {}
 
@@ -51,6 +51,7 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
   // check fields type
   for (auto values : value_vector) {
     const int sys_field_num = table_meta.sys_field_num();
+    // 在词法语法解析中，我只把std::vector<Value>进行reverse
     for (int i = 0; i < value_num; i++) {
       const FieldMeta *field_meta = table_meta.field(i + sys_field_num);
       const AttrType field_type = field_meta->type();
@@ -77,7 +78,7 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
   }
   
   // everything alright
-  InsertStmt * insert_stmt = new InsertStmt(table, value_vector.data(), value_vector.size());
+  InsertStmt * insert_stmt = new InsertStmt(table, &value_vector, value_vector.size());
   stmt = insert_stmt;
   return RC::SUCCESS;
 }

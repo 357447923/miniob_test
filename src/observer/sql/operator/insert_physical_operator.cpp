@@ -19,22 +19,44 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
-InsertPhysicalOperator::InsertPhysicalOperator(Table *table, vector<Value> &&values)
-    : table_(table), values_(std::move(values))
+InsertPhysicalOperator::InsertPhysicalOperator(Table *table, const vector<vector<Value>> *values)
+    : table_(table), values_(values)
 {}
 
 RC InsertPhysicalOperator::open(Trx *trx)
 {
-  Record record;
-  RC rc = table_->make_record(static_cast<int>(values_.size()), values_.data(), record);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to make record. rc=%s", strrc(rc));
-    return rc;
-  }
+  vector<Record> records;
+  int count = static_cast<int>(values_->size());
 
-  rc = trx->insert_record(table_, record);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to insert record by transaction. rc=%s", strrc(rc));
+  RC rc = RC::SUCCESS;
+  // 初始化所有的记录
+  for (int i = 0; i < count; i++) {
+    Record record;
+    rc = table_->make_record(values_->operator[](i).size(), values_->operator[](i).data(), record);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to make record. rc=%s", strrc(rc));
+      return rc;
+    }
+    records.push_back(record);
+  }
+  // 插入所有的记录，success字段用来做错误回退
+  int success;
+  for (success = 0; success < count; ++success) {
+    rc = trx->insert_record(table_, records[success]);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to insert record by transaction. rc=%s", strrc(rc));
+      goto failed_to_insert;
+    }
+  }
+  return rc;
+
+failed_to_insert:
+  // 错误回退, 解决回退失败 TODO
+  for (int i = 0; i < success; ++i){
+    rc = trx->delete_record(table_, records[i]);
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to rollback record by transaction. rc=%s, no=%d", strrc(rc), i);
+    }
   }
   return rc;
 }

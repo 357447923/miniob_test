@@ -356,11 +356,14 @@ insert_stmt:        /*insert   语句的语法解析树*/
       if ($7 != nullptr) {
         std::vector<Value> *tmp = $7;
         tmp->emplace_back(*$6);
-        $$->insertion.values.emplace_back(*tmp); 
+        $$->insertion.values.emplace_back(*tmp);
         delete $7;
       }else {
         std::vector<Value> tmp = {*$6};
-        $$->insertion.values.emplace_back(tmp); 
+        $$->insertion.values.emplace_back(tmp);
+      }
+      for (auto &value : $$->insertion.values) {
+        std::reverse(value.begin(), value.end());
       }
       std::reverse($$->insertion.values.begin(), $$->insertion.values.end());
       delete $6;
