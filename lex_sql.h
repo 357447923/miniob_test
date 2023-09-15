@@ -541,7 +541,7 @@ extern int yylex \
 #undef yyTABLES_NAME
 #endif
 
-#line 139 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.l"
+#line 141 "/home/xiaoming/miniob/src/observer/sql/parser/lex_sql.l"
 
 
 #line 548 "lex_sql.h"
