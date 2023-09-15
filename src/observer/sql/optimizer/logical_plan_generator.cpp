@@ -167,7 +167,9 @@ RC LogicalPlanGenerator::create_plan(
     InsertStmt *insert_stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
   Table *table = insert_stmt->table();
-  vector<Value> values(insert_stmt->values(), insert_stmt->values() + insert_stmt->value_amount());
+  const vector<Value> *insert_values = insert_stmt->values();
+  const Value * ptr = insert_values->data() + insert_stmt->value_amount();
+  vector<Value> values(insert_values->data(), ptr);
 
   InsertLogicalOperator *insert_operator = new InsertLogicalOperator(table, values);
   logical_operator.reset(insert_operator);
@@ -176,7 +178,6 @@ RC LogicalPlanGenerator::create_plan(
 
 RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, std::unique_ptr<LogicalOperator> &logical_operator) {
   Table *table = update_stmt->table();
-  FilterStmt *filter_stmt = update_stmt->filter_stmt();
   // int count = update_stmt->value_amount();
   
   // 找到要修改的字段来生成执行计划

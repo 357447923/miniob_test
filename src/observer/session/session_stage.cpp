@@ -125,6 +125,9 @@ void SessionStage::handle_request(StageEvent *event)
  * select、delete等DML语句，会产生一些执行计划，如果感觉繁琐，可以跳过optimize直接看
  * execute_stage中的执行，通过explain语句看需要哪些operator，然后找对应的operator来
  * 调试或者看代码执行过程即可。
+ * 
+ * 
+ * 逻辑算子，物理算子，表达式的生命周期都是从各自被创建到调用这个函数的函数返回
  */
 RC SessionStage::handle_sql(SQLStageEvent *sql_event)
 {

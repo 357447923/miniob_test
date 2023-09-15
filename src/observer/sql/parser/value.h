@@ -47,6 +47,8 @@ public:
     this->set_data(data, length);
   }
 
+  ~Value() = default;
+  
   explicit Value(int val);
   explicit Value(float val);
   explicit Value(bool val);
