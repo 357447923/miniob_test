@@ -484,11 +484,13 @@ select_stmt:        /*  select 语句的语法解析树*/
             delete $2;
         }
         if ($8 != nullptr) {
+            // std::cout << "$8的conditons大小:" << $8->size() << std::endl;
             $$->selection.conditions.swap(*$8);
             delete $8;
         }
         if ($9 != nullptr) {
           $$->selection.relations.swap($9->relations);
+          // std::cout << "$9的conditons大小:" << $9->conditions.size() << std::endl;
           $$->selection.conditions.insert($$->selection.conditions.end(), $9->conditions.begin()
             , $9->conditions.end());
           delete $9;
@@ -497,7 +499,7 @@ select_stmt:        /*  select 语句的语法解析树*/
         $$->selection.relations.push_back($4);
         std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
         if ($10 != nullptr) {
-            $$->selection.conditions.swap(*$10);
+            $$->selection.conditions.insert($$->selection.conditions.end(), $10->begin(), $10->end());
             delete $10;
         }
         delete $7;
@@ -521,7 +523,8 @@ join_list:
         }
         
         $6->push_back(*$5);
-        $$->conditions.swap(*$6);
+        // std::cout << "condition add" << std::endl;
+        $$->conditions.insert($$->conditions.end(), $6->begin(), $6->end());
         delete $6;
         delete $5;
         free($3);
@@ -682,13 +685,14 @@ condition_list:
       $$->emplace_back(*$1);
       delete $1;
     }
-    | ON condition condition_list {
-      if ($3 != nullptr) {
-        $$ = $3;
-      }else {
-        $$ = new std::vector<ConditionSqlNode>;
-      }
-      $$->push_back(*$2);
+    | ON condition AND condition_list {
+      $$ = $4;
+      $$->emplace_back(*$2);
+      delete $2;
+    }
+    | ON condition {
+      $$ = new std::vector<ConditionSqlNode>;
+      $$->emplace_back(*$2);
       delete $2;
     }
     ;
