@@ -117,7 +117,7 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
   std::vector<ConditionSqlNode> *   condition_list;
   std::vector<RelAttrSqlNode> *     rel_attr_list;
   std::vector<std::string> *        relation_list;
-  std::vector<std::string> *        join_list;
+  JoinSqlNode *                     join_list;
   char *                            string;
   int                               number;
   float                             floats;
@@ -488,8 +488,10 @@ select_stmt:        /*  select 语句的语法解析树*/
             delete $8;
         }
         if ($9 != nullptr) {
-            $$->selection.relations.swap(*$9);
-            delete $9;
+          $$->selection.relations.swap($9->relations);
+          $$->selection.conditions.insert($$->selection.conditions.end(), $9->conditions.begin()
+            , $9->conditions.end());
+          delete $9;
         }
         $$->selection.relations.push_back($7);
         $$->selection.relations.push_back($4);
@@ -498,6 +500,8 @@ select_stmt:        /*  select 语句的语法解析树*/
             $$->selection.conditions.swap(*$10);
             delete $10;
         }
+        delete $7;
+        delete $4;
     }
     ;
 
@@ -509,23 +513,27 @@ join_list:
         if ($7 != nullptr) {
             $$ = $7;
         }else {
-            $$ = new std::vector<std::string>;
+            $$ = new JoinSqlNode;
         }
-        $$->push_back($3);
+        $$->relations.emplace_back($3);
         if ($6 == nullptr) {
-            $6 = new std::vector<ConditionSqlNode>;
+          $6 = new std::vector<ConditionSqlNode>;
         }
+        
         $6->push_back(*$5);
+        $$->conditions.swap(*$6);
+        delete $6;
+        delete $5;
         free($3);
     }
     | INNER JOIN ID join_list {
         if ($4 != nullptr) {
             $$ = $4;
         }else {
-            $$ = new std::vector<std::string>;
+            $$ = new JoinSqlNode;
         }
 
-        $$->push_back($3);
+        $$->relations.push_back($3);
         free($3);
     }
     ;
@@ -674,12 +682,14 @@ condition_list:
       $$->emplace_back(*$1);
       delete $1;
     }
-    | ON condition_list {
-      if ($2 != nullptr) {
-        $$ = $2;
+    | ON condition condition_list {
+      if ($3 != nullptr) {
+        $$ = $3;
       }else {
         $$ = new std::vector<ConditionSqlNode>;
       }
+      $$->push_back(*$2);
+      delete $2;
     }
     ;
 condition:

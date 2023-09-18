@@ -55,6 +55,7 @@ enum CompOp
   NO_OP
 };
 
+
 /**
  * @brief 表示一个条件比较
  * @ingroup SQLParser
@@ -87,8 +88,7 @@ struct RelationSqlNode
 
 struct JoinSqlNode
 {
-  const std::string left = nullptr;
-  const std::string right = nullptr;
+  std::vector<std::string> relations;
   std::vector<ConditionSqlNode> conditions;
 };
 
