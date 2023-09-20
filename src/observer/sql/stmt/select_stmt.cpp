@@ -114,13 +114,42 @@ RC SelectStmt::create(Db *db, const SelectSqlNode &select_sql, Stmt *&stmt)
       }
 
       Table *table = tables[0];
-      const FieldMeta *field_meta = table->table_meta().field(relation_attr.attribute_name.c_str());
+      const FieldMeta *field_meta = nullptr;
+      if (relation_attr.type == FUNC_NONE) {
+        field_meta = table->table_meta().field(relation_attr.attribute_name.c_str());
+      }else {
+        int len = strlen(agg_func_type[relation_attr.type]);
+        const char *field_name = relation_attr.attribute_name
+          .substr(len + 1, relation_attr.attribute_name.size() - (len + 2)).c_str();
+        if (strcmp(field_name, "*") == 0) {
+          // TODO 解耦
+          switch(relation_attr.type) {
+            case FUNC_COUNT: {
+              // 随便找一列
+              field_name = table->table_meta().field(0)->name();
+            }break;
+            default: {
+              LOG_INFO("func: %s can't receive '*' as param", agg_func_type[relation_attr.type]);
+              return RC::SQL_SYNTAX;
+            }break;
+          }
+        }
+        field_meta = table->table_meta().field(field_name);
+        if (field_meta == nullptr) {
+          LOG_ERROR("Can't find field:'%s'", field_name);
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+        }
+        if ((relation_attr.type == FUNC_COUNT || relation_attr.type == FUNC_AVG) && field_meta->type() == AttrType::CHARS) {
+          LOG_INFO("func: %s can't receive type 'CHARS' as param", agg_func_type[relation_attr.type]);
+          return RC::SQL_SYNTAX;
+        }
+      }
       if (nullptr == field_meta) {
         LOG_WARN("no such field. field=%s.%s.%s", db->name(), table->name(), relation_attr.attribute_name.c_str());
         return RC::SCHEMA_FIELD_MISSING;
       }
 
-      query_fields.push_back(Field(table, field_meta));
+      query_fields.push_back(Field(table, field_meta, relation_attr.type));
     }
   }
 

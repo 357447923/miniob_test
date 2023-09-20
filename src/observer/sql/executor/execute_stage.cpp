@@ -68,12 +68,23 @@ RC ExecuteStage::handle_request_with_physical_operator(SQLStageEvent *sql_event)
     case StmtType::SELECT: {
       SelectStmt *select_stmt = static_cast<SelectStmt *>(stmt);
       bool with_table_name = select_stmt->tables().size() > 1;
-
-      for (const Field &field : select_stmt->query_fields()) {
+      const std::vector<Field> &fields = select_stmt->query_fields();
+      const std::vector<RelAttrSqlNode> &attrs = sql_event->sql_node()->selection.attributes;
+      for (int i = 0; i < fields.size(); i++) {
+        int idx = attrs.size() - 1 - i;
         if (with_table_name) {
-          schema.append_cell(field.table_name(), field.field_name());
+          if (attrs[idx].type != FUNC_NONE) {
+            schema.append_cell(TupleCellSpec(fields[i].table_name(), 
+                  fields[i].field_name(), attrs[idx].attribute_name.c_str()));
+          }else {
+            schema.append_cell(fields[i].table_name(), fields[i].field_name());
+          }
         } else {
-          schema.append_cell(field.field_name());
+          if (attrs[idx].type != FUNC_NONE) {
+            schema.append_cell(attrs[idx].attribute_name.c_str());
+          }else {
+            schema.append_cell(fields[i].field_name());
+          }
         }
       }
     } break;

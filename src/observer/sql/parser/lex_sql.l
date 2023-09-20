@@ -117,10 +117,13 @@ LOAD                                    RETURN_TOKEN(LOAD);
 DATA                                    RETURN_TOKEN(DATA);
 INFILE                                  RETURN_TOKEN(INFILE);
 EXPLAIN                                 RETURN_TOKEN(EXPLAIN);
+MAX                                     RETURN_TOKEN(MAX);
+AVG                                     RETURN_TOKEN(AVG);
+MIN                                     RETURN_TOKEN(MIN);
+COUNT                                   RETURN_TOKEN(COUNT);
 {ID}                                    yylval->string=strdup(yytext); RETURN_TOKEN(ID);
 "("                                     RETURN_TOKEN(LBRACE);
 ")"                                     RETURN_TOKEN(RBRACE);
-
 ","                                     RETURN_TOKEN(COMMA);
 "="                                     RETURN_TOKEN(EQ);
 "<="                                    RETURN_TOKEN(LE);

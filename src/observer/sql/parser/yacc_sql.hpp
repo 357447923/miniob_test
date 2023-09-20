@@ -94,17 +94,21 @@ extern int yydebug;
     DATA = 295,                    /* DATA  */
     INFILE = 296,                  /* INFILE  */
     EXPLAIN = 297,                 /* EXPLAIN  */
-    EQ = 298,                      /* EQ  */
-    LT = 299,                      /* LT  */
-    GT = 300,                      /* GT  */
-    LE = 301,                      /* LE  */
-    GE = 302,                      /* GE  */
-    NE = 303,                      /* NE  */
-    NUMBER = 304,                  /* NUMBER  */
-    FLOAT = 305,                   /* FLOAT  */
-    ID = 306,                      /* ID  */
-    SSS = 307,                     /* SSS  */
-    UMINUS = 308                   /* UMINUS  */
+    MAX = 298,                     /* MAX  */
+    MIN = 299,                     /* MIN  */
+    AVG = 300,                     /* AVG  */
+    COUNT = 301,                   /* COUNT  */
+    EQ = 302,                      /* EQ  */
+    LT = 303,                      /* LT  */
+    GT = 304,                      /* GT  */
+    LE = 305,                      /* LE  */
+    GE = 306,                      /* GE  */
+    NE = 307,                      /* NE  */
+    NUMBER = 308,                  /* NUMBER  */
+    FLOAT = 309,                   /* FLOAT  */
+    ID = 310,                      /* ID  */
+    SSS = 311,                     /* SSS  */
+    UMINUS = 312                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -113,12 +117,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 105 "/home/xiaoming/miniob/src/observer/sql/parser/yacc_sql.y"
+#line 109 "/home/xiaoming/miniob/src/observer/sql/parser/yacc_sql.y"
 
   ParsedSqlNode *                   sql_node;
   ConditionSqlNode *                condition;
   Value *                           value;
   enum CompOp                       comp;
+  enum AggFuncType                  agg_func;
   RelAttrSqlNode *                  rel_attr;
   std::vector<AttrInfoSqlNode> *    attr_infos;
   AttrInfoSqlNode *                 attr_info;
@@ -129,12 +134,13 @@ union YYSTYPE
   std::vector<ConditionSqlNode> *   condition_list;
   std::vector<RelAttrSqlNode> *     rel_attr_list;
   std::vector<std::string> *        relation_list;
-  std::vector<std::string> *        join_list;
+
+  std::vector<RelAttrSqlNode> *     func_attr_list;
   char *                            string;
   int                               number;
   float                             floats;
 
-#line 138 "/home/xiaoming/miniob/src/observer/sql/parser/yacc_sql.hpp"
+#line 144 "/home/xiaoming/miniob/src/observer/sql/parser/yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

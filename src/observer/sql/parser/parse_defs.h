@@ -28,17 +28,19 @@ class Expression;
  */
 
 /**
- * @brief 描述一个属性
+ * @brief 描述聚合函数
  * @ingroup SQLParser
- * @details 属性，或者说字段(column, field)
- * Rel -> Relation
- * Attr -> Attribute
  */
-struct RelAttrSqlNode
+enum AggFuncType 
 {
-  std::string relation_name;   ///< relation name (may be NULL) 表名
-  std::string attribute_name;  ///< attribute name              属性名
+  FUNC_MAX,
+  FUNC_MIN,
+  FUNC_COUNT,
+  FUNC_AVG,
+  FUNC_NONE
 };
+// 最好不要放头文件里
+const static char *agg_func_type[] = {"MAX", "MIN", "COUNT", "AVG"}; 
 
 /**
  * @brief 描述比较运算符
@@ -53,6 +55,20 @@ enum CompOp
   GREAT_EQUAL,  ///< ">="
   GREAT_THAN,   ///< ">"
   NO_OP
+};
+
+/**
+ * @brief 描述一个属性
+ * @ingroup SQLParser
+ * @details 属性，或者说字段(column, field)
+ * Rel -> Relation
+ * Attr -> Attribute
+ */
+struct RelAttrSqlNode
+{
+  AggFuncType type = AggFuncType::FUNC_NONE;            ///< 聚合函数类型，默认非使用聚合函数列
+  std::string relation_name;   ///< relation name (may be NULL) 表名
+  std::string attribute_name;  ///< attribute name              属性名
 };
 
 /**

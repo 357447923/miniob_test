@@ -137,6 +137,7 @@ class RowTuple : public Tuple
 {
 public:
   RowTuple() = default;
+
   virtual ~RowTuple()
   {
     for (FieldExpr *spec : speces_) {
@@ -248,32 +249,44 @@ public:
     this->tuple_ = tuple;
   }
 
-  void add_cell_spec(TupleCellSpec *spec)
+  void add_cell_spec(TupleCellSpec *spec, AggFuncType type)
   {
     speces_.push_back(spec);
+    types_.push_back(type);
   }
   int cell_num() const override
   {
     return speces_.size();
   }
 
-  RC cell_at(int index, Value &cell) const override
-  {
-    if (index < 0 || index >= static_cast<int>(speces_.size())) {
-      return RC::INTERNAL;
-    }
-    if (tuple_ == nullptr) {
-      return RC::INTERNAL;
-    }
+const std::vector<AggFuncType>& func_types() {
+  return types_;
+}
 
+RC cell_at(int index, Value &cell) const override
+{
+  if (index < 0 || index >= static_cast<int>(speces_.size())) {
+    return RC::INTERNAL;
+  }
+  if (tuple_ == nullptr) {
+    return RC::INTERNAL;
+  }
+  const AggFuncType func_type = types_[index];
+  if (func_type == FUNC_NONE) {
     const TupleCellSpec *spec = speces_[index];
     return tuple_->find_cell(*spec, cell);
+  }else {
+    return tuple_->cell_at(index, cell);
   }
+}
+RC find_cell(const TupleCellSpec &spec, Value &cell) const override
+{
+  return tuple_->find_cell(spec, cell);
+}
 
-  RC find_cell(const TupleCellSpec &spec, Value &cell) const override
-  {
-    return tuple_->find_cell(spec, cell);
-  }
+const std::vector<TupleCellSpec *>& speces() {
+  return speces_;
+}
 
 #if 0
   RC cell_spec_at(int index, const TupleCellSpec *&spec) const override
@@ -287,6 +300,7 @@ public:
 #endif
 private:
   std::vector<TupleCellSpec *> speces_;
+  std::vector<AggFuncType> types_;
   Tuple *tuple_ = nullptr;
 };
 

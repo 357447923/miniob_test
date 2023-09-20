@@ -94,6 +94,10 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
         DATA
         INFILE
         EXPLAIN
+        MAX
+        MIN
+        AVG
+        COUNT
         EQ
         LT
         GT
@@ -107,6 +111,7 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
   ConditionSqlNode *                condition;
   Value *                           value;
   enum CompOp                       comp;
+  enum AggFuncType                  agg_func;
   RelAttrSqlNode *                  rel_attr;
   std::vector<AttrInfoSqlNode> *    attr_infos;
   AttrInfoSqlNode *                 attr_info;
@@ -117,7 +122,8 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
   std::vector<ConditionSqlNode> *   condition_list;
   std::vector<RelAttrSqlNode> *     rel_attr_list;
   std::vector<std::string> *        relation_list;
-  std::vector<std::string> *        join_list;
+
+  std::vector<RelAttrSqlNode> *     func_attr_list;
   char *                            string;
   int                               number;
   float                             floats;
@@ -135,6 +141,7 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
 %type <value>               value
 %type <number>              number
 %type <comp>                comp_op
+%type <agg_func>            agg_func
 %type <rel_attr>            rel_attr
 %type <attr_infos>          attr_def_list
 %type <attr_info>           attr_def
@@ -143,8 +150,10 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
 %type <condition_list>      where
 %type <condition_list>      condition_list
 %type <rel_attr_list>       select_attr
+%type <func_attr_list>      func_select_attr
+%type <func_attr_list>      func_attr_list
 %type <relation_list>       rel_list
-%type <join_list>           join_list
+
 %type <rel_attr_list>       attr_list
 %type <expression>          expression
 %type <expression_list>     expression_list
@@ -476,60 +485,39 @@ select_stmt:        /*  select 语句的语法解析树*/
       }
       free($4);
     }
-    | SELECT select_attr FROM ID INNER JOIN ID condition_list join_list where
+    | SELECT func_select_attr FROM ID rel_list where
     {
-        $$ = new ParsedSqlNode(SCF_SELECT);
-        if ($2 != nullptr) {
-            $$->selection.attributes.swap(*$2);
-            delete $2;
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.attributes.swap(*$2);
+        delete $2;
+
+        if ($5 != nullptr) {
+          $$->selection.relations.swap(*$5);
+          delete $5;
         }
-        if ($8 != nullptr) {
-            $$->selection.conditions.swap(*$8);
-            delete $8;
-        }
-        if ($9 != nullptr) {
-            $$->selection.relations.swap(*$9);
-            delete $9;
-        }
-        $$->selection.relations.push_back($7);
         $$->selection.relations.push_back($4);
         std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
-        if ($10 != nullptr) {
-            $$->selection.conditions.swap(*$10);
-            delete $10;
+
+        if ($6 != nullptr) {
+          $$->selection.conditions.swap(*$6);
+          delete $6;
         }
+        free($4);
+      }else {
+        if ($5 != nullptr) {
+          delete $5;
+        }
+        if ($6 != nullptr) {
+          delete $6;
+        }
+        free($4);
+        delete $$;
+        $$ = new ParsedSqlNode(SCF_ERROR);
+      }
     }
+
     ;
-
-join_list: 
-    {
-        $$ = nullptr;
-    }
-    | INNER JOIN ID ON condition condition_list join_list {
-        if ($7 != nullptr) {
-            $$ = $7;
-        }else {
-            $$ = new std::vector<std::string>;
-        }
-        $$->push_back($3);
-        if ($6 == nullptr) {
-            $6 = new std::vector<ConditionSqlNode>;
-        }
-        $6->push_back(*$5);
-        free($3);
-    }
-    | INNER JOIN ID join_list {
-        if ($4 != nullptr) {
-            $$ = $4;
-        }else {
-            $$ = new std::vector<std::string>;
-        }
-
-        $$->push_back($3);
-        free($3);
-    }
-    ;
-
 calc_stmt:
     CALC expression_list
     {
@@ -602,6 +590,46 @@ select_attr:
     }
     ;
 
+func_select_attr:
+    agg_func LBRACE select_attr RBRACE func_attr_list {
+        if ($5 != nullptr) {
+          $$ = $5;
+        }else {
+          $$ = new std::vector<RelAttrSqlNode>;
+        }
+        if ((*$3).size() > 1) {
+          delete $3;
+          delete $$;
+          $$ = nullptr;
+        }else {
+          std::string col_name;
+          col_name.append(agg_func_type[$1]).append("(").append((*$3)[0].attribute_name).append(")");
+          (*$3)[0].type = $1;
+          (*$3)[0].attribute_name = std::move(col_name);
+          // 目前只支持MAX,MIN,COUNT,AVG.他们都为一个参数
+          $$->emplace_back((*$3)[0]);
+          delete $3;
+        }
+    }
+    ;
+func_attr_list:
+    {
+      $$ = nullptr;
+    }
+    | COMMA agg_func LBRACE select_attr RBRACE func_attr_list {
+      if ($6 != nullptr) {
+        $$ = $6;
+      }else {
+        $$ = new std::vector<RelAttrSqlNode>;
+      }
+      std::string col_name;
+      col_name.append(agg_func_type[$2]).append("(").append((*$4)[0].attribute_name).append(")");
+      (*$4)[0].type = $2;
+      (*$4)[0].attribute_name = std::move(col_name);
+      $$->emplace_back((*$4)[0]);
+      delete $4;
+    }
+    ;
 rel_attr:
     ID {
       $$ = new RelAttrSqlNode;
@@ -732,6 +760,13 @@ condition:
       delete $3;
     }
     ;
+
+agg_func:
+      MAX { $$ = FUNC_MAX; }
+    | MIN { $$ = FUNC_MIN; }
+    | COUNT { $$ = FUNC_COUNT; }
+    | AVG { $$ = FUNC_AVG; }
+    | { $$ = FUNC_NONE; }
 
 comp_op:
       EQ { $$ = EQUAL_TO; }
