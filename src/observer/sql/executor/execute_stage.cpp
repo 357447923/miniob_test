@@ -73,14 +73,14 @@ RC ExecuteStage::handle_request_with_physical_operator(SQLStageEvent *sql_event)
       for (int i = 0; i < fields.size(); i++) {
         int idx = attrs.size() - 1 - i;
         if (with_table_name) {
-          if (attrs[idx].type != FUNC_NONE) {
+          if (idx >= 0 && attrs[idx].type != FUNC_NONE) {
             schema.append_cell(TupleCellSpec(fields[i].table_name(), 
                   fields[i].field_name(), attrs[idx].attribute_name.c_str()));
           }else {
             schema.append_cell(fields[i].table_name(), fields[i].field_name());
           }
         } else {
-          if (attrs[idx].type != FUNC_NONE) {
+          if (idx >= 0 && attrs[idx].type != FUNC_NONE) {
             schema.append_cell(attrs[idx].attribute_name.c_str());
           }else {
             schema.append_cell(fields[i].field_name());
