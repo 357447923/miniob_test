@@ -196,8 +196,9 @@ RC PhysicalPlanGenerator::create_plan(ProjectLogicalOperator &project_oper, uniq
 
   ProjectPhysicalOperator *project_operator = new ProjectPhysicalOperator;
   const vector<Field> &project_fields = project_oper.fields();
+  // 让投影能识别聚合函数，并且在投影中处理聚合函数
   for (const Field &field : project_fields) {
-    project_operator->add_projection(field.table(), field.meta());
+    project_operator->add_projection(&field);
   }
 
   if (child_phy_oper) {

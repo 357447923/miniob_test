@@ -25,7 +25,7 @@ class Field
 {
 public:
   Field() = default;
-  Field(const Table *table, const FieldMeta *field) : table_(table), field_(field)
+  Field(const Table *table, const FieldMeta *field, AggFuncType type = FUNC_NONE) : table_(table), field_(field), type_(type)
   {}
   Field(const Field &) = default;
 
@@ -41,6 +41,10 @@ public:
   AttrType attr_type() const
   {
     return field_->type();
+  }
+
+  AggFuncType type() const {
+    return type_;
   }
 
   const char *table_name() const
@@ -66,7 +70,9 @@ public:
 
   const char *get_data(const Record &record);
 
+
 private:
+  AggFuncType type_ = AggFuncType::FUNC_NONE;
   const Table *table_ = nullptr;
   const FieldMeta *field_ = nullptr;
 };

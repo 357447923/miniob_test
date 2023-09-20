@@ -26,13 +26,17 @@ public:
   ProjectPhysicalOperator()
   {}
 
-  virtual ~ProjectPhysicalOperator() = default;
+  virtual ~ProjectPhysicalOperator() {
+    if (is_none_func_ != nullptr) {
+      delete is_none_func_;
+    }
+  }
 
   void add_expressions(std::vector<std::unique_ptr<Expression>> &&expressions)
   {
     
   }
-  void add_projection(const Table *table, const FieldMeta *field);
+  void add_projection(const Field *field);
 
   PhysicalOperatorType type() const override
   {
@@ -50,6 +54,10 @@ public:
 
   Tuple *current_tuple() override;
 
+
+
 private:
+  // 返回值
   ProjectTuple tuple_;
+  bool *is_none_func_ = nullptr;
 };
