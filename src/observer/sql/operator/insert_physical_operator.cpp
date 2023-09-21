@@ -51,7 +51,8 @@ RC InsertPhysicalOperator::open(Trx *trx)
   return rc;
 
 failed_to_insert:
-  // 错误回退, 解决回退失败 TODO
+  // 错误回退
+  // TODO 解决回退失败 
   for (int i = 0; i < success; ++i){
     rc = trx->delete_record(table_, records[i]);
     if (rc != RC::SUCCESS) {

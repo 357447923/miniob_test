@@ -243,7 +243,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
         return rc;
       }
 
-      std::string cell_str = value.to_string();
+      std::string cell_str = value.attr_type() == NULLS? "NULL": value.to_string();
       rc = writer_->writen(cell_str.data(), cell_str.size());
       if (OB_FAIL(rc)) {
         LOG_WARN("failed to send data to client. err=%s", strerror(errno));

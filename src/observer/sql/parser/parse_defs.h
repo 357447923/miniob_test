@@ -181,6 +181,7 @@ struct UpdateSqlNode
 struct AttrInfoSqlNode
 {
   AttrType    type;       ///< Type of attribute
+  bool        not_null; ///< 是否非空，默认为可空   
   std::string name;       ///< Attribute name
   size_t      length;     ///< Length of attribute
 };
@@ -192,8 +193,8 @@ struct AttrInfoSqlNode
  */
 struct CreateTableSqlNode
 {
-  std::string                  relation_name;         ///< Relation name
-  std::vector<AttrInfoSqlNode> attr_infos;            ///< attributes
+  std::string                  relation_name;         ///< Relation name 表名
+  std::vector<AttrInfoSqlNode> attr_infos;            ///< attributes 属性
 };
 
 /**

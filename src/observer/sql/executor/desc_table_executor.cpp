@@ -50,6 +50,7 @@ RC DescTableExecutor::execute(SQLStageEvent *sql_event)
     tuple_schema.append_cell(TupleCellSpec("", "Field", "Field"));
     tuple_schema.append_cell(TupleCellSpec("", "Type", "Type"));
     tuple_schema.append_cell(TupleCellSpec("", "Length", "Length"));
+    tuple_schema.append_cell(TupleCellSpec("", "Null", "Null"));
 
     sql_result->set_tuple_schema(tuple_schema);
 
@@ -57,7 +58,9 @@ RC DescTableExecutor::execute(SQLStageEvent *sql_event)
     const TableMeta &table_meta = table->table_meta();
     for (int i = table_meta.sys_field_num(); i < table_meta.field_num(); i++) {
       const FieldMeta *field_meta = table_meta.field(i);
-      oper->append({field_meta->name(), attr_type_to_string(field_meta->type()), std::to_string(field_meta->len())});
+      // 这个数组结构的顺序一定得按照上面tuple_schema的顺序进行绑定
+      oper->append({field_meta->name(), attr_type_to_string(field_meta->type()), 
+                std::to_string(field_meta->len()), field_meta->not_null()? "YES": "NO"});
     }
 
     sql_result->set_operator(unique_ptr<PhysicalOperator>(oper));

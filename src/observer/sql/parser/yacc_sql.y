@@ -78,6 +78,10 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
         STRING_T
         FLOAT_T
         DATE_T
+        null
+        IS
+        NOT
+        NULLABLE
         HELP
         EXIT
         DOT //QUOTE
@@ -126,6 +130,7 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
   char *                            string;
   int                               number;
   float                             floats;
+  bool                              null;
 }
 
 %token <number> NUMBER
@@ -337,6 +342,7 @@ attr_def:
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = $4;
+      $$->not_null = true;
       free($1);
     }
     | ID type
@@ -345,7 +351,16 @@ attr_def:
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = 4;
+      $$->not_null = true;
       free($1);
+    }
+    | attr_def NOT null {
+      $$ = $1;
+      $$->not_null = true;
+    }
+    | attr_def NULLABLE {
+      $$ = $1;
+      $$->not_null = false;
     }
     ;
 number:
@@ -433,6 +448,11 @@ value:
       char *tmp = common::substr($1,1,strlen($1)-2);
       $$ = new Value(tmp);
       free(tmp);
+    }
+    |null {
+      $$ = new Value();
+      $$->set_null();
+      @$ = @1;
     }
     ;
     

@@ -28,7 +28,14 @@ public:
 
   virtual ~ProjectPhysicalOperator() {
     if (is_none_func_ != nullptr) {
+      if (!(*is_none_func_)) {
+        const Tuple *last_tuple = tuple_.tuple();
+        if (last_tuple != nullptr) {
+          delete last_tuple;
+        }
+      }
       delete is_none_func_;
+      is_none_func_ = nullptr;
     }
   }
 

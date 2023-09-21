@@ -55,9 +55,16 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
     // 在词法语法解析中，我只把std::vector<Value>进行reverse
     for (int i = 0; i < value_num; i++) {
       const FieldMeta *field_meta = table_meta.field(i + sys_field_num);
-      const AttrType field_type = field_meta->type();
       const AttrType value_type = values[i].attr_type();
-      if (field_type != value_type) {  // TODO try to convert the value type to field type
+      if (value_type == NULLS) {
+        if (field_meta->not_null()) {
+          LOG_ERROR("Unacceptable operation: put NULL into a NOT NULL field");
+          return RC::SCHEMA_FIELD_NOT_NULL;
+        }
+        continue;
+      }
+      const AttrType field_type = field_meta->type();
+      if (field_type != value_type) {
         Value& value = const_cast<Value&> (values[i]);
         RC rc = common::type_cast(value, field_type);
         if (rc == RC::SUCCESS) {

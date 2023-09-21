@@ -20,8 +20,17 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/comparator.h"
 #include "common/lang/string.h"
 #include "common/date.h"
+#include "common/typecast.h"
 
-const char *ATTR_TYPE_NAME[] = {"undefined", "chars", "ints", "floats", "dates", "booleans"};
+const char *ATTR_TYPE_NAME[] = {
+  [UNDEFINED] = "undefined", 
+  [CHARS] = "chars", 
+  [INTS] = "ints", 
+  [FLOATS] = "floats", 
+  [DATES] = "dates", 
+  [NULLS] = "nulls",
+  [BOOLEANS] = "booleans"
+};
 
 const char *attr_type_to_string(AttrType type)
 {
@@ -183,6 +192,9 @@ void Value::set_data(char *data, int length)
     case CHARS: {
       set_string(data, length);
     } break;
+    case NULLS: {
+      set_null();
+    }break;
     case INTS: case DATES: {
       num_value_.int_value_ = *(int *)data;
       length_ = length;
@@ -219,6 +231,11 @@ void Value::set_boolean(bool val)
   num_value_.bool_value_ = val;
   length_ = sizeof(val);
 }
+void Value::set_null() {
+  attr_type_ = NULLS;
+  length_ = 0;
+}
+
 void Value::set_string(const char *s, int len /*= 0*/)
 {
   attr_type_ = CHARS;
@@ -246,6 +263,9 @@ void Value::set_value(const Value &value)
     case FLOATS: {
       set_float(value.get_float());
     } break;
+    case NULLS: {
+      set_null();
+    }break;
     case CHARS: {
       set_string(value.get_string().c_str());
     } break;
@@ -286,6 +306,9 @@ std::string Value::to_string() const
     case BOOLEANS: {
       os << num_value_.bool_value_;
     } break;
+    case NULLS: {
+      os << "NULL";
+    }break;
     case CHARS: {
       os << str_value_;
     } break;
@@ -319,10 +342,16 @@ int Value::compare(const Value &other) const
       case BOOLEANS: {
         return common::compare_int((void *)&this->num_value_.bool_value_, (void *)&other.num_value_.bool_value_);
       }
+      case NULLS: {
+        return -1;
+      }
       default: {
         LOG_WARN("unsupported type: %d", this->attr_type_);
       }
     }
+  } else if (this->attr_type_ == NULLS || other.attr_type_ == NULLS) {
+    // 只要有一个是NULL，比较结果一定不相等
+    return -1;
   } else if (this->attr_type_ == INTS && other.attr_type_ == FLOATS) {
     float this_data = this->num_value_.int_value_;
     return common::compare_float((void *)&this_data, (void *)&other.num_value_.float_value_);

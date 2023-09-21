@@ -105,6 +105,7 @@ public:
     rid_   = other.rid_;
     data_  = other.data_;
     len_   = other.len_;
+    bitmap_len_ = other.bitmap_len_;
     owner_ = other.owner_;
 
     if (other.owner_) {
@@ -126,24 +127,27 @@ public:
     return *this;
   }
 
-  void set_data(char *data, int len = 0)
+  void set_data(char *data, int bitmap_len, int len = 0)
   {
     this->data_ = data;
-    this->len_  = len;
+    this->bitmap_len_ = bitmap_len;
+    this->len_ = len;
   }
-  void set_data_owner(char *data, int len)
+  void set_data_owner(char *data, int len, int bitmap_len)
   {
     ASSERT(len != 0, "the len of data should not be 0");
     this->~Record();
 
     this->data_  = data;
     this->len_   = len;
+    this->bitmap_len_ = bitmap_len;
     this->owner_ = true;
   }
 
   char       *data() { return this->data_; }
   const char *data() const { return this->data_; }
   int         len() const { return this->len_; }
+  int         bitmap_len() const { return this->bitmap_len_; }
 
   void set_rid(const RID &rid) { this->rid_ = rid; }
   void set_rid(const PageNum page_num, const SlotNum slot_num)
@@ -151,13 +155,25 @@ public:
     this->rid_.page_num = page_num;
     this->rid_.slot_num = slot_num;
   }
+  /**
+   * 声明record中的bitmap长度
+   * 该操作比较危险, 使用不当则会导致越界
+   * 建议配合common::bitmap_size(int)使用
+   * @param len bitmap的字节大小
+   */
+  void set_bitmap_len(const int len) {
+    bitmap_len_ = len;
+  }
+
   RID       &rid() { return rid_; }
   const RID &rid() const { return rid_; }
 
 private:
   RID rid_;
 
-  char *data_  = nullptr;
+  char *data_  = nullptr; /// data中最前面的数据是一个位图，用来当作NULL值标识符，位图的字节数相当于（字段数/8 + 1）,并且为NULL的会被记录为1
+  // 对于Record来说，真正的长度是len_+bitmap_len_
   int   len_   = 0;       /// 如果不是record自己来管理内存，这个字段可能是无效的
+  int   bitmap_len_ = 0;  /// 数据中的位图长度
   bool  owner_ = false;   /// 表示当前是否由record来管理内存
 };

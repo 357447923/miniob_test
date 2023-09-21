@@ -37,4 +37,13 @@ private:
   int size_;
 };
 
+/**
+ * @brief 通过所需要的位数来获取位图的size
+ * @param need 所需要的位数
+ * @return 该位数对应的位图所占字节数
+ */
+static inline int bitmap_size(int need) {
+  return (need >> 3) + 1;
+}
+
 }  // namespace common

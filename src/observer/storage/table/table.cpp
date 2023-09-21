@@ -262,7 +262,7 @@ RC Table::get_record(const RID &rid, Record &record)
   const int record_size = table_meta_.record_size();
   char *record_data = (char *)malloc(record_size);
   ASSERT(nullptr != record_data, "failed to malloc memory. record data size=%d", record_size);
-
+  int bitmap_size = table_meta_.field_metas()->size() / 8 + 1;
   auto copier = [&record, record_data, record_size](Record &record_src) {
     memcpy(record_data, record_src.data(), record_size);
     record.set_rid(record_src.rid());
@@ -274,7 +274,7 @@ RC Table::get_record(const RID &rid, Record &record)
     return rc;
   }
 
-  record.set_data_owner(record_data, record_size);
+  record.set_data_owner(record_data, record_size, bitmap_size);
   return rc;
 }
 
@@ -325,6 +325,11 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
   for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     const Value &value = values[i];
+    // 在前面生成stmt的时候已经做过判断表是否支持NULL类型了,如果value是NULL,能走到这里的都是支持的
+    if (value.attr_type() == NULLS) {
+      continue;
+    }
+    // 在前面生成stmt的时候已经做过类型转换了，如果在这里类型不同，那肯定就是无法转为对应类型
     if (field->type() != value.attr_type()) {
       LOG_ERROR("Invalid value type. table name =%s, field name=%s, type=%d, but given=%d",
                 table_meta_.name(), field->name(), field->type(), value.attr_type());
@@ -332,24 +337,33 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
     }
   }
 
-  // 复制所有字段的值
-  int record_size = table_meta_.record_size();
-  char *record_data = (char *)malloc(record_size);
+  
 
+  // 复制所有字段的值
+  int bitmap_size = table_meta_.field_metas()->size() / 8 + 1;
+  int record_size = table_meta_.record_size();
+  char *data = (char *)malloc(record_size + bitmap_size);
+  // 存储数据真正的起始点
+  char *record_data = data + bitmap_size;
+
+  common::Bitmap bitmap(data, bitmap_size);
   for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     const Value &value = values[i];
     size_t copy_len = field->len();
-    if (field->type() == CHARS) {
+    if (value.attr_type() == NULLS) {
+      bitmap.set_bit(i);
+    }else if (field->type() == CHARS) {
       const size_t data_len = value.length();
       if (copy_len > data_len) {
         copy_len = data_len + 1;
       }
     }
+    // 对记录数据进行拷贝
     memcpy(record_data + field->offset(), value.data(), copy_len);
   }
 
-  record.set_data_owner(record_data, record_size);
+  record.set_data_owner(data, record_size, bitmap_size);
   return RC::SUCCESS;
 }
 
