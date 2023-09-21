@@ -14,20 +14,13 @@ See the Mulan PSL v2 for more details. */
 
 #include "sql/stmt/update_stmt.h"
 #include "common/log/log.h"
-#include "sql/stmt/filter_stmt.h"
+#include "common/typecast.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
 
 UpdateStmt::UpdateStmt(Table *table, const Value *values, int value_amount, FilterStmt *filter_stmt, const std::string& attribute_name)
     : table_(table), values_(values), value_amount_(value_amount), filter_stmt_(filter_stmt), attribute_name_(attribute_name)
 {}
-
-// TODO 把convert_value抽取到存放类型转换相关方法的文件中
-/**
- * @brief 类型转换，把value中的类型转为meta对应的类型
- * 
- */
-RC convert_value(Value& value, const FieldMeta *meta);
 
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
 {
@@ -61,7 +54,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
   if (field_type != value_type) {
     // 对update.value进行数据类型转换
     Value& value = const_cast<Value&>(update.value);
-    RC rc = convert_value(value, field_meta);
+    RC rc = common::type_cast(value, field_meta->type());
     if (rc != RC::SUCCESS) {
       LOG_WARN("field type mismatch. table=%s, field=%s, field_type=%d, value_type=%d",
           table_name, field_meta->name(), field_type, value_type);

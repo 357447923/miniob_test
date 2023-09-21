@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include <string>
+#include "common/rc.h"
 
 /**
  * @brief 属性的类型, 增加属性的时候需要修改value.cpp的ATTR_TYPE_NAME表
@@ -113,3 +114,9 @@ private:
   } num_value_;
   std::string str_value_;
 };
+
+
+RC str_to_target(Value& value, AttrType target);
+RC ints_to_target(Value& value, AttrType target);
+RC floats_to_target(Value& value, AttrType target);
+RC dates_to_target(Value& value, AttrType target);

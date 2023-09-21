@@ -13,6 +13,7 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include "common/rc.h"
+#include "common/typecast.h"
 
 const char *strrc(RC rc)
 {

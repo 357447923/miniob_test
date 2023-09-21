@@ -13,6 +13,7 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include <sstream>
+#include <string>
 #include "sql/parser/value.h"
 #include "storage/field/field.h"
 #include "common/log/log.h"
@@ -37,6 +38,123 @@ AttrType attr_type_from_string(const char *s)
     }
   }
   return UNDEFINED;
+}
+
+/**
+ * 下面是几种类型转换到对应类型的函数
+ */
+
+RC str_to_target(Value& value, AttrType target) {
+  // 类型相同时直接返回
+  if (target == CHARS) {
+    return RC::SUCCESS;
+  }
+  // 不是以下几种类型，直接返回错误
+  if (target != INTS && target != FLOATS && target != DATES) {
+    LOG_ERROR("cast to int error, because str can't be convert to %s", attr_type_to_string(target));
+    return RC::TYPE_CAST_ERROR;
+  }
+  // 检验是否可以被解析
+  int len = value.length();
+  if (len <= 0) {
+    LOG_WARN("cast to int error, because strlen=0");
+    return RC::TYPE_CAST_ERROR;
+  }
+  const char *str = value.get_string().c_str();
+  if (str[0] < '0' || str[0] > '9') {
+    LOG_WARN("cast to int error, because str:'%s' contains non-number", str);
+    return RC::TYPE_CAST_ERROR;
+  }
+
+  // 为不同数据类型提供不同的转换方法
+  switch (target) {
+    case INTS: {
+      int number = atoi(str);
+      if (number == 0 && str[0] != '0') {
+        LOG_WARN("cast to int error, because str:'%s' can't be convert to integer", str);
+        return RC::TYPE_CAST_ERROR;
+      }
+      value.set_int(number);
+    }break;
+
+    case FLOATS: {
+      float number = atof(str);
+      if (number == 0 && str[0] != '0') {
+        LOG_WARN("cast to int error, because str:'%s' can't be convert to float", str);
+        return RC::TYPE_CAST_ERROR;
+      }
+      value.set_float(number);
+    }break;
+
+    case DATES: {
+      int date = -1;
+      if (str_to_date(str, date) != RC::SUCCESS) {
+        LOG_WARN("cast to date error, because str:'%s' can't be convert to date", str);
+        return RC::TYPE_CAST_ERROR;
+      }
+      value.set_date(date);
+    }break;
+  }
+  return RC::SUCCESS;
+}
+
+RC ints_to_target(Value& value, AttrType target) {
+  if (target == INTS) {
+    return RC::SUCCESS;
+  }
+
+  if (target != FLOATS && target != CHARS) {
+    LOG_ERROR("Type: ints can't cast to %s", attr_type_to_string(target));
+    return RC::TYPE_CAST_ERROR;
+  }
+
+  switch (target) {
+    case FLOATS:
+      value.set_float(value.get_int());
+      break;
+    case CHARS: {
+      std::string str = std::to_string(value.get_int());
+      value.set_string(str.c_str(), str.length());
+    }break;
+  }
+
+  return RC::SUCCESS;
+}
+
+RC floats_to_target(Value& value, AttrType target) {
+  if (target == FLOATS) {
+    return RC::SUCCESS;
+  }
+
+  if (target != INTS && target != CHARS) {
+    LOG_ERROR("Type: floats can't cast to %s", attr_type_to_string(target));
+    return RC::TYPE_CAST_ERROR;
+  }
+
+  switch (target) {
+  case INTS:
+    value.set_int((int)value.get_float());
+    break;
+  case CHARS: {
+    std::string str = std::to_string(value.get_float());
+    value.set_string(str.c_str(), str.length());
+  }break;
+  }
+  return RC::SUCCESS;
+}
+
+RC dates_to_target(Value& value, AttrType target) {
+  if (target == DATES) {
+    return RC::SUCCESS;
+  }
+  if (target != CHARS) {
+    LOG_ERROR("date can't cast to %s", attr_type_to_string(target));
+    return RC::TYPE_CAST_ERROR;
+  }
+  std::string str = date_to_str(value.get_date());
+  value.set_string(str.c_str(), str.length());
+
+  return RC::SUCCESS;
 }
 
 Value::Value(int val)

@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/db/db.h"
 #include "storage/table/table.h"
 #include "common/date.h"
+#include "common/typecast.h"
 
 FilterStmt::~FilterStmt()
 {
@@ -26,37 +27,6 @@ FilterStmt::~FilterStmt()
     delete unit;
   }
   filter_units_.clear();
-}
-
-// TODO 把convert_value抽取到存放类型转换相关方法的文件中
-/**
- * @brief 类型转换，把value中的类型转为meta对应的类型
- * 
- */
-RC convert_value(Value& value, const FieldMeta *meta) {
-  AttrType type = value.attr_type();
-  AttrType field_type = meta->type();
-  RC rc = RC::SUCCESS;
-  // 类型相同不需要转换
-  if (type == field_type) {
-    return rc;
-  }
-  switch (field_type) {
-    // 元数据类型是DATES并且传入类型是字符串时，可以进行转换
-  case DATES:
-    if (type == CHARS) {
-      int32_t date = -1;
-      rc = str_to_date(value.data(), date);
-      if (rc != RC::SUCCESS) {
-        return rc;
-      }
-      value.set_date(date);
-    }
-    break;
-  default:
-    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
-  }
-  return rc;
 }
 
 RC FilterStmt::create(Db *db, Table *default_table, std::unordered_map<std::string, Table *> *tables,
@@ -161,7 +131,8 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     }
 
     Value& value = const_cast<Value&>(condition.right_value);
-    rc = convert_value(value, field);
+    // 进行类型转换
+    rc = common::type_cast(value, field->type());
     if (rc != RC::SUCCESS) {
       LOG_WARN("Str: %s, can't be convert to date", value.data());
       return rc;
