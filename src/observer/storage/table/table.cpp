@@ -236,10 +236,10 @@ RC Table::insert_record(Record &record)
   return rc;
 }
 
-RC Table::update_record(Record &record, int offset, Value &value) {
+RC Table::update_record(Record &record, int offset, int index, Value &value) {
   RC rc = RC::SUCCESS;
   Record origin_record(record);
-  rc = record_handler_->update_record(offset, value, &record.rid());
+  rc = record_handler_->update_record(offset, index, value, record);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Update record failed. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
     return rc;

@@ -128,6 +128,20 @@ const FieldMeta *TableMeta::field(const char *name) const
   return nullptr;
 }
 
+const FieldMeta *TableMeta::field(const char *name, int &index) const {
+  if (nullptr == name) {
+    return nullptr;
+  }
+  index = 0;
+  for (const FieldMeta &field : fields_) {
+    if (0 == strcmp(field.name(), name)) {
+      return &field;
+    }
+    index++;
+  }
+  return nullptr;
+}
+
 const FieldMeta *TableMeta::find_field_by_offset(int offset) const
 {
   for (const FieldMeta &field : fields_) {

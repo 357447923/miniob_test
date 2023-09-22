@@ -258,24 +258,37 @@ RC RecordPageHandler::delete_record(const RID *rid)
   }
 }
 
-RC RecordPageHandler::update_record(int offset, Value &value, const RID *rid) {
+RC RecordPageHandler::update_record(int offset, int index, Value &value, const Record &record) {
   ASSERT(readonly_ == false, "cannot update record into page while the page is readonly");
   
-  if (rid->slot_num >= page_header_->record_capacity) {
-    LOG_ERROR("Invalid slot_num %d, exceed page's record capacity, page_num %d.", rid->slot_num, frame_->page_num());
+  const RID &rid = record.rid();
+  
+  if (rid.slot_num >= page_header_->record_capacity) {
+    LOG_ERROR("Invalid slot_num %d, exceed page's record capacity, page_num %d.", rid.slot_num, frame_->page_num());
     return RC::INVALID_ARGUMENT;
   }
-
+  
   Bitmap bitmap(bitmap_, page_header_->record_capacity);
-  if (!bitmap.get_bit(rid->slot_num)) {
-    LOG_DEBUG("Invalid slot_num %d, slot is empty, page_num %d.", rid->slot_num, frame_->page_num());
+  if (!bitmap.get_bit(rid.slot_num)) {
+    LOG_DEBUG("Invalid slot_num %d, slot is empty, page_num %d.", rid.slot_num, frame_->page_num());
     return RC::RECORD_NOT_EXIST;
   }
-
+  
   Record *origin_record = nullptr;
-  char *origin_data = get_record_data(rid->slot_num);
+  char *origin_data = get_record_data(rid.slot_num);
+  int bitmap_len = record.bitmap_len();
+  bitmap = Bitmap(origin_data, bitmap_len);
+
+  // 修改位图
+  // 如果是从非NULL -> NULL, 那就需要修改为1。
+  // 如果从NULL -> 非NULL，那就需要修改为0。
+  if (value.attr_type() == NULLS) {
+    bitmap.set_bit(index);
+  }else {
+    bitmap.clear_bit(index);
+  }
   // 修改数据
-  char *change_loc = (char *)((uint64_t)(origin_data) + offset);
+  char *change_loc = (char *)((uint64_t)(origin_data) + bitmap_len + offset);
   const char *data = value.data();
   memcpy(change_loc, data, value.length());
   frame_->mark_dirty();
@@ -449,16 +462,16 @@ RC RecordFileHandler::recover_insert_record(const char *data, int record_size, c
   return record_page_handler.recover_insert_record(data, rid);
 }
 
-RC RecordFileHandler::update_record(int offset, Value &value, const RID *rid) {
+RC RecordFileHandler::update_record(int offset, int index, Value &value, const Record &record) {
   RC rc = RC::SUCCESS;
 
   RecordPageHandler page_handler;
-  if ((rc = page_handler.init(*disk_buffer_pool_, rid->page_num, false)) != RC::SUCCESS) {
-    LOG_ERROR("Failed to init record_page_handler. page_number=%d. rc=%s", rid->page_num, strrc(rc));
+  if ((rc = page_handler.init(*disk_buffer_pool_, record.rid().page_num, false)) != RC::SUCCESS) {
+    LOG_ERROR("Failed to init record_page_handler. page_number=%d. rc=%s", record.rid().page_num, strrc(rc));
     return rc;
   }
-
-  rc = page_handler.update_record(offset, value, rid);
+  
+  rc = page_handler.update_record(offset, index, value, record);
   // TODO
 
   return rc;

@@ -49,16 +49,23 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
 
   // 这里由于UpdateSqlNode中仅仅只有一个value
   // 所以也仅仅支持一个字段的更新
-  const AttrType field_type = field_meta->type();
   const AttrType value_type = update.value.attr_type();
-  if (field_type != value_type) {
-    // 对update.value进行数据类型转换
-    Value& value = const_cast<Value&>(update.value);
-    RC rc = common::type_cast(value, field_meta->type());
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("field type mismatch. table=%s, field=%s, field_type=%d, value_type=%d",
-          table_name, field_meta->name(), field_type, value_type);
-      return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  if (value_type == NULLS) {
+    if (field_meta->not_null()) {
+      LOG_ERROR("You can't put NULL to an not null field");
+      return RC::SCHEMA_FIELD_NOT_NULL;
+    }
+  }else {
+    const AttrType field_type = field_meta->type();
+    if (field_type != value_type) {
+      // 对update.value进行数据类型转换     // TODO 把数据类型转换做的不那么随意些，可以参考MySQL的隐式类型转换
+      Value& value = const_cast<Value&>(update.value);
+      RC rc = common::type_cast(value, field_meta->type());
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("field type mismatch. table=%s, field=%s, field_type=%d, value_type=%d",
+            table_name, field_meta->name(), field_type, value_type);
+        return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+      }
     }
   }
   

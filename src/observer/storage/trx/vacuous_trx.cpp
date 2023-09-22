@@ -56,8 +56,8 @@ RC VacuousTrx::insert_record(Table *table, Record &record)
   return table->insert_record(record);
 }
 
-RC VacuousTrx::update_record(Table *table, Record &record, int offset, Value &value) {
-  return table->update_record(record, offset, value);
+RC VacuousTrx::update_record(Table *table, Record &record, int offset, int index, Value &value) {
+  return table->update_record(record, offset, index, value);
 }
 
 RC VacuousTrx::delete_record(Table *table, Record &record)

@@ -56,9 +56,10 @@ RC UpdatePhysicalOperator::next() {
     
     RowTuple *row_tuple = static_cast<RowTuple *>(tuple);
     Record &record = row_tuple->record();
-    const FieldMeta *field = table_->table_meta().field(field_name_);
+    int index;
+    const FieldMeta *field = table_->table_meta().field(field_name_, index);
     int offset = field->offset();
-    rc = trx_->update_record(table_, record, offset, value_);
+    rc = trx_->update_record(table_, record, offset, index, value_);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to delete record: %s", strrc(rc));
       return rc;

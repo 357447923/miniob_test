@@ -146,7 +146,17 @@ public:
 
   virtual RC insert_record(Table *table, Record &record) = 0;
   virtual RC delete_record(Table *table, Record &record) = 0;
-  virtual RC update_record(Table *table, Record &record, int offset, Value &value) = 0;
+  /**
+   * 
+   * @brief index 是用于位图更新
+   * 
+   * @param table 要更新的字段所在的表
+   * @param record 要更新的记录
+   * @param offset 要更新的字段的位置相对于所有的字段的偏移量
+   * @param index 要更新的字段是第几个字段, 从0开始
+   * @param value 更新后的数据
+   */
+  virtual RC update_record(Table *table, Record &record, int offset, int index, Value &value) = 0;
   virtual RC visit_record(Table *table, Record &record, bool readonly) = 0;
 
   virtual RC start_if_need() = 0;

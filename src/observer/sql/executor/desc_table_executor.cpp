@@ -60,7 +60,7 @@ RC DescTableExecutor::execute(SQLStageEvent *sql_event)
       const FieldMeta *field_meta = table_meta.field(i);
       // 这个数组结构的顺序一定得按照上面tuple_schema的顺序进行绑定
       oper->append({field_meta->name(), attr_type_to_string(field_meta->type()), 
-                std::to_string(field_meta->len()), field_meta->not_null()? "YES": "NO"});
+                std::to_string(field_meta->len()), field_meta->not_null()? "NO": "YES"});
     }
 
     sql_result->set_operator(unique_ptr<PhysicalOperator>(oper));

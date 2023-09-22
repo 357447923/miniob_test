@@ -164,7 +164,7 @@ public:
    * @param data 要插入的记录
    * @param rid  如果插入成功，通过这个参数返回插入的位置
    */
-  RC insert_record(const char *data, RID *rid);
+  RC insert_record(const char *data, RID *record);
 
   /**
    * @brief 数据库恢复时，在指定位置插入数据
@@ -181,7 +181,7 @@ public:
    */
   RC delete_record(const RID *rid);
 
-  RC update_record(int offset, Value &value, const RID *rid);
+  RC update_record(int offset, int index, Value &value, const Record &record);
 
   /**
    * @brief 获取指定位置的记录数据
@@ -270,9 +270,9 @@ public:
   /**
    * @brief 修改指定槽位的记录
    * 
-   * @param rid 待修改的槽位
+   * @param record 待修改的记录
    */
-  RC update_record(int offset, Value &value, const RID *rid);
+  RC update_record(int offset, int index, Value &value, const Record &record);
   /**
    * @brief 插入一个新的记录到指定文件中，并返回该记录的标识符
    * 
