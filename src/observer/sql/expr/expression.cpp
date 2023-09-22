@@ -89,26 +89,26 @@ ComparisonExpr::~ComparisonExpr()
 RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &result) const
 {
   RC rc = RC::SUCCESS;
-  int cmp_result = left.compare(right);
+  RC cmp_result = left.compare(right);
   result = false;
   switch (comp_) {
     case EQUAL_TO: {
-      result = (0 == cmp_result);
+      result = (RC::LEFT_EQ_ANOTHER == cmp_result);
     } break;
     case LESS_EQUAL: {
-      result = (cmp_result <= 0);
+      result = (cmp_result == RC::LEFT_LT_ANOTHER || cmp_result == RC::LEFT_EQ_ANOTHER);
     } break;
     case NOT_EQUAL: {
-      result = (cmp_result != 0);
+      result = (cmp_result != RC::LEFT_EQ_ANOTHER);
     } break;
     case LESS_THAN: {
-      result = (cmp_result < 0);
+      result = (cmp_result == RC::LEFT_LT_ANOTHER);
     } break;
     case GREAT_EQUAL: {
-      result = (cmp_result >= 0);
+      result = (cmp_result == RC::LEFT_GT_ANOTHER || cmp_result == RC::LEFT_GT_ANOTHER);
     } break;
     case GREAT_THAN: {
-      result = (cmp_result > 0);
+      result = (cmp_result == RC::LEFT_GT_ANOTHER);
     } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);

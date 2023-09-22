@@ -323,45 +323,48 @@ std::string Value::to_string() const
   return os.str();
 }
 
-int Value::compare(const Value &other) const
+static inline RC rc_cmp_res(int num_cmp_res) {
+  if (num_cmp_res > 0) {
+    return RC::LEFT_GT_ANOTHER;
+  }
+  if (num_cmp_res == 0) {
+    return RC::LEFT_EQ_ANOTHER;
+  }
+  return RC::LEFT_LT_ANOTHER;
+}
+
+RC Value::compare(const Value &other) const
 {
   if (this->attr_type_ == other.attr_type_) {
     switch (this->attr_type_) {
       case INTS: case DATES: {
-        return common::compare_int((void *)&this->num_value_.int_value_, (void *)&other.num_value_.int_value_);
+        return rc_cmp_res(common::compare_int((void *)&this->num_value_.int_value_, (void *)&other.num_value_.int_value_));
       } break;
       case FLOATS: {
-        return common::compare_float((void *)&this->num_value_.float_value_, (void *)&other.num_value_.float_value_);
+        return rc_cmp_res(common::compare_float((void *)&this->num_value_.float_value_, (void *)&other.num_value_.float_value_));
       } break;
       case CHARS: {
-        return common::compare_string((void *)this->str_value_.c_str(),
+        return rc_cmp_res(common::compare_string((void *)this->str_value_.c_str(),
             this->str_value_.length(),
             (void *)other.str_value_.c_str(),
-            other.str_value_.length());
+            other.str_value_.length()));
       } break;
       case BOOLEANS: {
-        return common::compare_int((void *)&this->num_value_.bool_value_, (void *)&other.num_value_.bool_value_);
-      }
-      case NULLS: {
-        return -1;
-      }
-      default: {
-        LOG_WARN("unsupported type: %d", this->attr_type_);
+        return rc_cmp_res(common::compare_int((void *)&this->num_value_.bool_value_, (void *)&other.num_value_.bool_value_));
       }
     }
-  } else if (this->attr_type_ == NULLS || other.attr_type_ == NULLS) {
-    // 只要有一个是NULL，比较结果一定不相等
-    return -1;
   } else if (this->attr_type_ == INTS && other.attr_type_ == FLOATS) {
     float this_data = this->num_value_.int_value_;
-    return common::compare_float((void *)&this_data, (void *)&other.num_value_.float_value_);
+    return rc_cmp_res(common::compare_float((void *)&this_data, (void *)&other.num_value_.float_value_));
   } else if (this->attr_type_ == FLOATS && other.attr_type_ == INTS) {
     float other_data = other.num_value_.int_value_;
-    return common::compare_float((void *)&this->num_value_.float_value_, (void *)&other_data);
+    return rc_cmp_res(common::compare_float((void *)&this->num_value_.float_value_, (void *)&other_data));
   }
   // TODO 可能可以考虑增加字符串与日期的比较
-  LOG_WARN("not supported");
-  return -1;  // TODO return rc?
+  if (this->attr_type_ != NULLS && other.attr_type_ != NULLS) {
+    LOG_WARN("unsupported type: %s compare to another type: %s", this->attr_type_, other.attr_type_);
+  }
+  return RC::LEFT_CAN_NOT_CMP_TO_ANOTHER;
 }
 
 int Value::get_int() const

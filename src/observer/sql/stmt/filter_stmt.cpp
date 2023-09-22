@@ -92,6 +92,19 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
 
   filter_unit = new FilterUnit;
   // 类型转换可以枚举一下左边是值，右边是值，两边都是属性的情况
+  if (!condition.left_is_attr && !condition.right_is_attr) {
+    // 对unit左边进行初始化
+    FilterObj filter_obj_left;
+    filter_obj_left.init_value(condition.left_value);
+    filter_unit->set_left(filter_obj_left);
+    // 对unit右边进行初始化
+    FilterObj filter_obj_right;
+    filter_obj_right.init_value(condition.right_value);
+    filter_unit->set_right(filter_obj_right);
+    filter_unit->set_comp(comp);
+    return RC::SUCCESS;
+  }
+  
   if (condition.left_is_attr) {
     Table *table = nullptr;
     const FieldMeta *field = nullptr;
@@ -129,13 +142,15 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
       LOG_WARN("cannot find attr");
       return rc;
     }
-
-    Value& value = const_cast<Value&>(condition.right_value);
-    // 进行类型转换
-    rc = common::type_cast(value, field->type());
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("Str: %s, can't be convert to date", value.data());
-      return rc;
+    // 仅有非NULL类型的值才有数据转换的必要
+    if (condition.right_value.attr_type() != NULLS) {
+      Value& value = const_cast<Value&>(condition.right_value);
+      // 进行类型转换
+      rc = common::type_cast(value, field->type());
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("Str: %s, can't be convert to date", value.data());
+        return rc;
+      }
     }
 
     FilterObj filter_obj;

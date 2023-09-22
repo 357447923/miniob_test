@@ -50,6 +50,8 @@ enum CompOp
 {
   EQUAL_TO,     ///< "="
   LESS_EQUAL,   ///< "<="
+  IS_NULL,
+  NOT_NULL,     ///< 对于NULL类型的运算，我暂且放这里
   NOT_EQUAL,    ///< "<>"
   LESS_THAN,    ///< "<"
   GREAT_EQUAL,  ///< ">="

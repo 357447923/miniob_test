@@ -138,28 +138,28 @@ bool DefaultConditionFilter::filter(const Record &rec) const
     right_value.set_value(right_.value);
   }
 
-  int cmp_result = left_value.compare(right_value);
+  RC cmp_result = left_value.compare(right_value);
 
   switch (comp_op_) {
     case EQUAL_TO:
-      return 0 == cmp_result;
+      return RC::LEFT_EQ_ANOTHER == cmp_result;
     case LESS_EQUAL:
-      return cmp_result <= 0;
+      return cmp_result == RC::LEFT_LT_ANOTHER || cmp_result == RC::LEFT_EQ_ANOTHER;
     case NOT_EQUAL:
-      return cmp_result != 0;
+      return cmp_result != RC::LEFT_EQ_ANOTHER;
     case LESS_THAN:
-      return cmp_result < 0;
+      return cmp_result == RC::LEFT_LT_ANOTHER;
     case GREAT_EQUAL:
-      return cmp_result >= 0;
+      return cmp_result == RC::LEFT_GT_ANOTHER || cmp_result == RC::LEFT_GT_ANOTHER;
     case GREAT_THAN:
-      return cmp_result > 0;
+      return cmp_result == RC::LEFT_GT_ANOTHER;
 
     default:
       break;
   }
 
   LOG_PANIC("Never should print this.");
-  return cmp_result;  // should not go here
+  return false;  // should not go here
 }
 
 CompositeConditionFilter::~CompositeConditionFilter()

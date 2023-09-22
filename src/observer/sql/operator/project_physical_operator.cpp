@@ -79,12 +79,12 @@ Tuple *ProjectPhysicalOperator::current_tuple()
         tuple->find_cell(*speces[i], tmp);
         switch (tuple_.func_types()[i]) {
         case FUNC_MAX: {
-          if (values[i].compare(tmp) < 0) {
+          if (values[i].compare(tmp) == RC::LEFT_LT_ANOTHER) {
             values[i].set_value(tmp);
           }
         };break;
         case FUNC_MIN: {
-          if (values[i].compare(tmp) > 0) {
+          if (values[i].compare(tmp) == RC::LEFT_GT_ANOTHER) {
             values[i].set_value(tmp);
           }
         }break;
