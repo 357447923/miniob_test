@@ -107,7 +107,7 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
       result = comp_can_cmp && (cmp_result == RC::LEFT_LT_ANOTHER);
     } break;
     case GREAT_EQUAL: {
-      result = comp_can_cmp && (cmp_result == RC::LEFT_GT_ANOTHER || cmp_result == RC::LEFT_GT_ANOTHER);
+      result = comp_can_cmp && (cmp_result == RC::LEFT_GT_ANOTHER || cmp_result == RC::LEFT_EQ_ANOTHER);
     } break;
     case GREAT_THAN: {
       result = comp_can_cmp && (cmp_result == RC::LEFT_GT_ANOTHER);

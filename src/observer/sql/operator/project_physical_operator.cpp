@@ -66,8 +66,8 @@ Tuple *ProjectPhysicalOperator::current_tuple()
     const std::vector<TupleCellSpec *> &speces = tuple_.speces();
     std::vector<Value> values;
     Tuple *tuple = children_[0]->current_tuple();
-    // tuple总数量
-    int size = 1;
+    // 用来存储给avg使用的被除数
+    std::unordered_map<Value *, int> value_size;
     const std::vector<AggFuncType> &func_types = tuple_.func_types();
     // 先把当前tuple中的数据取出
     for (int i = 0; i < speces.size(); i++) {
@@ -77,6 +77,8 @@ Tuple *ProjectPhysicalOperator::current_tuple()
       // 把为count聚合函数的初始值赋值
       if (func_types[i] == FUNC_COUNT) {
         values[i].set_int(values[i].attr_type() == NULLS? 0: 1);
+      }else if (func_types[i] == FUNC_AVG) {
+        value_size.insert(std::pair<Value *, int>(&values[i], values[i].attr_type() == NULLS? 0: 1)); 
       }
     }
     while((rc = next()) == RC::SUCCESS) {
@@ -86,7 +88,6 @@ Tuple *ProjectPhysicalOperator::current_tuple()
         tuple->find_cell(*speces[i], tmp);
         // 为NULL值的数据不参与计算
         if (tmp.attr_type() != NULLS) {
-          size++;
           switch (tuple_.func_types()[i]) {
           case FUNC_MAX: {
             if (values[i].compare(tmp) == RC::LEFT_LT_ANOTHER) {
@@ -105,7 +106,9 @@ Tuple *ProjectPhysicalOperator::current_tuple()
               values[i].set_int(values[i].get_int() + tmp.get_int());
             }
           }break;
-          case FUNC_COUNT: break;
+          case FUNC_COUNT: {
+            values[i].set_int(values[i].get_int() + 1);
+          }break;
           default:{
             LOG_WARN("Unacceptable aggregate func");
           }break;
@@ -120,14 +123,12 @@ Tuple *ProjectPhysicalOperator::current_tuple()
 
         Value &val = values[i];
         AttrType type = val.attr_type();
+        int size = value_size[&val];
         if (size > 0 && (type == AttrType::INTS || type == AttrType::FLOATS)) {
           values[i].set_float(values[i].get_float() / size);
         }else {
           values[i].set_type(NULLS);
         }
-      }else if (func_types[i] == FUNC_COUNT) {
-        // 判断values中是使用count聚合函数的，它的第一个元组值是否为null，是则count值为size-1
-        values[i].set_int(values[i].attr_type() == NULLS? size - 1: size);
       }
     }
     // 把聚合好的数据装入value_list中
