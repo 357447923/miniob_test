@@ -100,6 +100,7 @@ Tuple *ProjectPhysicalOperator::current_tuple()
             }
           }break;
           case FUNC_AVG: {
+            value_size[&values[i]];
             if (tmp.attr_type() == FLOATS) {
               values[i].set_float(values[i].get_float() + tmp.get_float());
             }else {

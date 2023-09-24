@@ -112,21 +112,19 @@ RC ints_to_target(Value& value, AttrType target) {
     return RC::SUCCESS;
   }
 
-  if (target != FLOATS && target != CHARS) {
+  if (target != FLOATS) {
     LOG_ERROR("Type: ints can't cast to %s", attr_type_to_string(target));
     return RC::TYPE_CAST_ERROR;
   }
 
+  value.set_float(value.get_int());
+/*
   switch (target) {
     case FLOATS:
       value.set_float(value.get_int());
       break;
-    case CHARS: {
-      std::string str = std::to_string(value.get_int());
-      value.set_string(str.c_str(), str.length());
-    }break;
   }
-
+*/
   return RC::SUCCESS;
 }
 
@@ -135,20 +133,20 @@ RC floats_to_target(Value& value, AttrType target) {
     return RC::SUCCESS;
   }
 
-  if (target != INTS && target != CHARS) {
+  if (target != INTS) {
     LOG_ERROR("Type: floats can't cast to %s", attr_type_to_string(target));
     return RC::TYPE_CAST_ERROR;
   }
 
+  value.set_int(value.get_float());
+/*
   switch (target) {
   case INTS:
     value.set_int((int)value.get_float());
     break;
-  case CHARS: {
-    std::string str = std::to_string(value.get_float());
-    value.set_string(str.c_str(), str.length());
-  }break;
   }
+*/
+
   return RC::SUCCESS;
 }
 
