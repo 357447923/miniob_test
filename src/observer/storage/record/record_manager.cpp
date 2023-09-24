@@ -288,7 +288,7 @@ RC RecordPageHandler::update_record(int offset, int index, Value &value, const R
     bitmap.clear_bit(index);
   }
   // 修改数据
-  char *change_loc = (char *)((uint64_t)(origin_data) + bitmap_len + offset);
+  char *change_loc = (char *)((uint64_t)(origin_data) + offset);
   const char *data = value.data();
   memcpy(change_loc, data, value.length());
   frame_->mark_dirty();

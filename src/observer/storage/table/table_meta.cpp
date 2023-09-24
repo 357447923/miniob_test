@@ -53,7 +53,8 @@ RC TableMeta::init(int32_t table_id, const char *name, int field_num, const Attr
 
   RC rc = RC::SUCCESS;
   
-  int field_offset = 0;
+  // 在第一个field之前有一个位图
+  int field_offset = common::bitmap_size(field_num);
   int trx_field_num = 0;
   const vector<FieldMeta> *trx_fields = TrxKit::instance()->trx_fields();
   if (trx_fields != nullptr) {
@@ -289,7 +290,9 @@ int TableMeta::deserialize(std::istream &is)
   table_id_ = table_id;
   name_.swap(table_name);
   fields_.swap(fields);
-  record_size_ = fields_.back().offset() + fields_.back().len() - fields_.begin()->offset();
+  // 这里我进行了修改，先注释一下，可能后面会改也说不定
+  // 这里我加载进来的record_size_把record(不包含位图)修改成包含位图，不然会导致我目前创建时的record_size_与重新加载进来的大小不一致
+  record_size_ = fields_.back().offset() + fields_.back().len();
 
   const Json::Value &indexes_value = table_value[FIELD_INDEXES];
   if (!indexes_value.empty()) {

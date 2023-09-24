@@ -60,61 +60,78 @@ Tuple *ProjectPhysicalOperator::current_tuple()
       }
     }
   }
+  // TODO 可能做了一些没有必要的计算，可以考虑进行修改
   if (!(*is_none_func_)) {
     RC rc = RC::SUCCESS;
     const std::vector<TupleCellSpec *> &speces = tuple_.speces();
     std::vector<Value> values;
     Tuple *tuple = children_[0]->current_tuple();
-    int size = 1;
+    // 用来存储给avg使用的被除数
+    std::unordered_map<Value *, int> value_size;
+    const std::vector<AggFuncType> &func_types = tuple_.func_types();
+    // 先把当前tuple中的数据取出
     for (int i = 0; i < speces.size(); i++) {
       Value tmp;
       tuple->find_cell(*speces[i], tmp);
       values.push_back(tmp);
+      // 把为count聚合函数的初始值赋值
+      if (func_types[i] == FUNC_COUNT) {
+        values[i].set_int(values[i].attr_type() == NULLS? 0: 1);
+      }else if (func_types[i] == FUNC_AVG) {
+        value_size.insert(std::pair<Value *, int>(&values[i], values[i].attr_type() == NULLS? 0: 1)); 
+      }
     }
     while((rc = next()) == RC::SUCCESS) {
-      size++;
       Tuple *tuple = children_[0]->current_tuple();
       for(int i = 0; i < speces.size(); i++) {
         Value tmp;
         tuple->find_cell(*speces[i], tmp);
-        switch (tuple_.func_types()[i]) {
-        case FUNC_MAX: {
-          if (values[i].compare(tmp) == RC::LEFT_LT_ANOTHER) {
-            values[i].set_value(tmp);
+        // 为NULL值的数据不参与计算
+        if (tmp.attr_type() != NULLS) {
+          switch (tuple_.func_types()[i]) {
+          case FUNC_MAX: {
+            if (values[i].compare(tmp) == RC::LEFT_LT_ANOTHER) {
+              values[i].set_value(tmp);
+            }
+          };break;
+          case FUNC_MIN: {
+            if (values[i].compare(tmp) == RC::LEFT_GT_ANOTHER) {
+              values[i].set_value(tmp);
+            }
+          }break;
+          case FUNC_AVG: {
+            if (tmp.attr_type() == FLOATS) {
+              values[i].set_float(values[i].get_float() + tmp.get_float());
+            }else {
+              values[i].set_int(values[i].get_int() + tmp.get_int());
+            }
+          }break;
+          case FUNC_COUNT: {
+            values[i].set_int(values[i].get_int() + 1);
+          }break;
+          default:{
+            LOG_WARN("Unacceptable aggregate func");
+          }break;
           }
-        };break;
-        case FUNC_MIN: {
-          if (values[i].compare(tmp) == RC::LEFT_GT_ANOTHER) {
-            values[i].set_value(tmp);
-          }
-        }break;
-        case FUNC_AVG: {
-          if (tmp.attr_type() == FLOATS) {
-            values[i].set_float(values[i].get_float() + tmp.get_float());
-          }else {
-            values[i].set_int(values[i].get_int() + tmp.get_int());
-          }
-        }break;
-        case FUNC_COUNT: break;
-        default:{
-          LOG_WARN("Unacceptable aggregate func");
-        }break;
         }
+        
       }
     }
-
+    // 计算count和avg
     for (int i = 0; i < speces.size(); i++) {
-      if (tuple_.func_types()[i] == FUNC_AVG) {
+      if (func_types[i] == FUNC_AVG) {
+
         Value &val = values[i];
-        if (val.attr_type() == AttrType::INTS) {
-          values[i].set_int((float)values[i].get_int() / size);
-        }else {
+        AttrType type = val.attr_type();
+        int size = value_size[&val];
+        if (size > 0 && (type == AttrType::INTS || type == AttrType::FLOATS)) {
           values[i].set_float(values[i].get_float() / size);
+        }else {
+          values[i].set_type(NULLS);
         }
-      }else if (tuple_.func_types()[i] == FUNC_COUNT) {
-        values[i].set_int(size);
       }
     }
+    // 把聚合好的数据装入value_list中
     ValueListTuple *value_list = new ValueListTuple;
     value_list->set_cells(values);
     tuple_.set_tuple(value_list);

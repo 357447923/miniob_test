@@ -106,6 +106,7 @@ RC insert_record_from_file(Table *table,
 
   if (RC::SUCCESS == rc) {
     Record record;
+    
     rc = table->make_record(field_num, record_values.data(), record);
     if (rc != RC::SUCCESS) {
       errmsg << "insert failed.";

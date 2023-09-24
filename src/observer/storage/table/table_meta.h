@@ -35,7 +35,7 @@ public:
   TableMeta(const TableMeta &other);
 
   void swap(TableMeta &other) noexcept;
-
+  /*如果init方法进行了更新，那么反序列化方法和序列化方法也必须考虑是否需要更新*/
   RC init(int32_t table_id, const char *name, int field_num, const AttrInfoSqlNode attributes[]);
 
   RC add_index(const IndexMeta &index);
