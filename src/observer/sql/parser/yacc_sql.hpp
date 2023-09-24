@@ -142,9 +142,8 @@ union YYSTYPE
   char *                            string;
   int                               number;
   float                             floats;
-  bool                              null;
 
-#line 148 "/home/xiaoming/miniob/src/observer/sql/parser/yacc_sql.hpp"
+#line 147 "/home/xiaoming/miniob/src/observer/sql/parser/yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

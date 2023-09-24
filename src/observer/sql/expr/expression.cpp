@@ -91,25 +91,37 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
   RC rc = RC::SUCCESS;
   RC cmp_result = left.compare(right);
   result = false;
+  const bool comp_can_cmp = cmp_result != RC::LEFT_CAN_NOT_CMP_TO_ANOTHER;
+
   switch (comp_) {
     case EQUAL_TO: {
-      result = (RC::LEFT_EQ_ANOTHER == cmp_result);
+      result = comp_can_cmp && (RC::LEFT_EQ_ANOTHER == cmp_result);
     } break;
     case LESS_EQUAL: {
-      result = (cmp_result == RC::LEFT_LT_ANOTHER || cmp_result == RC::LEFT_EQ_ANOTHER);
+      result = comp_can_cmp && (cmp_result == RC::LEFT_LT_ANOTHER || cmp_result == RC::LEFT_EQ_ANOTHER);
     } break;
     case NOT_EQUAL: {
-      result = (cmp_result != RC::LEFT_EQ_ANOTHER);
+      result = comp_can_cmp && (cmp_result != RC::LEFT_EQ_ANOTHER);
     } break;
     case LESS_THAN: {
-      result = (cmp_result == RC::LEFT_LT_ANOTHER);
+      result = comp_can_cmp && (cmp_result == RC::LEFT_LT_ANOTHER);
     } break;
     case GREAT_EQUAL: {
-      result = (cmp_result == RC::LEFT_GT_ANOTHER || cmp_result == RC::LEFT_GT_ANOTHER);
+      result = comp_can_cmp && (cmp_result == RC::LEFT_GT_ANOTHER || cmp_result == RC::LEFT_GT_ANOTHER);
     } break;
     case GREAT_THAN: {
-      result = (cmp_result == RC::LEFT_GT_ANOTHER);
+      result = comp_can_cmp && (cmp_result == RC::LEFT_GT_ANOTHER);
     } break;
+    case IS_NULL: {
+      AttrType left_type = left.attr_type();
+      AttrType right_type = right.attr_type();
+      result = left_type == right_type && left_type == NULLS;
+    }break;
+    case NOT_NULL: {
+      AttrType left_type = left.attr_type();
+      AttrType right_type = right.attr_type();
+      result = (left_type == NULLS || right_type == NULLS) && (left_type != NULLS || right_type != NULLS);
+    }break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
       rc = RC::INTERNAL;

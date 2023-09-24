@@ -153,7 +153,16 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       return cmp_result == RC::LEFT_GT_ANOTHER || cmp_result == RC::LEFT_GT_ANOTHER;
     case GREAT_THAN:
       return cmp_result == RC::LEFT_GT_ANOTHER;
-
+    case IS_NULL: {
+      AttrType left_type = left_value.attr_type();
+      AttrType right_type = right_value.attr_type();
+      return left_type == right_type && left_type == NULLS;
+    }
+    case NOT_NULL: {
+      AttrType left_type = left_value.attr_type();
+      AttrType right_type = right_value.attr_type();
+      return (left_type == NULLS || right_type == NULLS) && (left_type != NULLS || right_type != NULLS);
+    }
     default:
       break;
   }

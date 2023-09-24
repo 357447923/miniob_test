@@ -262,7 +262,7 @@ RC Table::get_record(const RID &rid, Record &record)
   const int record_size = table_meta_.record_size();
   char *record_data = (char *)malloc(record_size);
   ASSERT(nullptr != record_data, "failed to malloc memory. record data size=%d", record_size);
-  int bitmap_size = table_meta_.field_metas()->size() / 8 + 1;
+  int bitmap_size = common::bitmap_size(table_meta_.field_metas()->size());
   auto copier = [&record, record_data, record_size](Record &record_src) {
     memcpy(record_data, record_src.data(), record_size);
     record.set_rid(record_src.rid());
@@ -340,12 +340,11 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
   
 
   // 复制所有字段的值
-  int bitmap_size = table_meta_.field_metas()->size() / 8 + 1;
+  int bitmap_size = common::bitmap_size(table_meta_.field_metas()->size());
   int record_size = table_meta_.record_size();
-  char *data = (char *)malloc(record_size + bitmap_size);
-  // 存储数据真正的起始点
-  char *record_data = data + bitmap_size;
-
+  char *data = (char *)malloc(record_size);
+  // 刚申请的内存去做位图的话，必须先初始化
+  memcpy(data, "\0", bitmap_size);
   common::Bitmap bitmap(data, bitmap_size);
   for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
@@ -360,7 +359,7 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
       }
     }
     // 对记录数据进行拷贝
-    memcpy(record_data + field->offset(), value.data(), copy_len);
+    memcpy(data + field->offset(), value.data(), copy_len);
   }
 
   record.set_data_owner(data, record_size, bitmap_size);

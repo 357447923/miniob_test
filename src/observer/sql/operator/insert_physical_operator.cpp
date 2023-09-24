@@ -32,6 +32,7 @@ RC InsertPhysicalOperator::open(Trx *trx)
   // 初始化所有的记录
   for (int i = 0; i < count; i++) {
     Record record;
+    const Value &value = values_->operator[](i)[0];
     rc = table_->make_record(values_->operator[](i).size(), values_->operator[](i).data(), record);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to make record. rc=%s", strrc(rc));
